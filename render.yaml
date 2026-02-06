@@ -20,7 +20,7 @@ services:
       - key: HOSPITAL_NAME
         value: Tiwari Hospital
       - key: HOSPITAL_ADDRESS
-        value: Your Hospital Address
+        value: Tamkuhi Raj, Kushinagar, Uttar Pradesh - 274407
       - key: HOSPITAL_PHONE
         value: +91-XXXXXXXXXX
       - key: HOSPITAL_LOGO_PATH
