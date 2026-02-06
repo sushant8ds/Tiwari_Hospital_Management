@@ -5,9 +5,15 @@
 - [x] Fixed email validator dependency
 - [x] Updated hospital address to: **Tamkuhi Raj, Kushinagar, Uttar Pradesh - 274407**
 - [x] Created database initialization script
+- [x] **FIXED: Updated init_render_db.py to match current Doctor and Bed models** ✨
 - [x] Pushed all changes to GitHub
 
 ## 🚀 Next Steps (DO THIS NOW)
+
+### IMPORTANT: Database Script Was Fixed!
+The `init_render_db.py` script had outdated field names. This has been **FIXED** and pushed to GitHub.
+
+**Render will automatically redeploy** when it detects the new commit. Wait 5-10 minutes for the rebuild.
 
 ### 1. Wait for Render Deployment
 - Render will automatically detect the new commit
@@ -27,9 +33,14 @@
 
 This will:
 - ✅ Create all database tables
-- ✅ Add 5 doctors (so they show in OPD dropdown)
-- ✅ Add 20 beds across 4 wards
+- ✅ Add 5 doctors with correct fees (so they show in OPD dropdown)
+- ✅ Add 20 beds across 3 ward types (General, Semi-Private, Private)
 - ✅ Set up the system for use
+
+**What's Different Now:**
+- Doctors now have `new_patient_fee` and `followup_fee` fields
+- Beds now have `ward_type` (GENERAL/SEMI_PRIVATE/PRIVATE) and `per_day_charge`
+- All fields match the current database models ✅
 
 ### 3. Update Environment Variable (Optional)
 
