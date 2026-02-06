@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/schemas/employee.py
+# hypothesis_version: 6.151.5
+
+[2000, 2100, 'duty_hours', 'month', 'monthly_salary', 'year']

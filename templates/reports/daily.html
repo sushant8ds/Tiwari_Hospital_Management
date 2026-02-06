@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Reports - {{ hospital_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-bar me-2"></i>Daily Reports</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <!-- Report Type Selection -->
+                <div class="form-group mb-3">
+                    <label for="reportType">Select Report Type:</label>
+                    <select id="reportType" class="form-control">
+                        <option value="daily-opd">Daily OPD Report</option>
+                        <option value="doctor-revenue">Doctor Revenue Report</option>
+                        <option value="ipd-occupancy">IPD Occupancy Report</option>
+                        <option value="salary">Salary Report</option>
+                    </select>
+                </div>
+                
+                <!-- Daily OPD Report Form -->
+                <div id="dailyOpdForm" class="report-form">
+                    <h4>Daily OPD Report</h4>
+                    <div class="form-group mb-3">
+                        <label for="opdReportDate">Report Date:</label>
+                        <input type="date" id="opdReportDate" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="opdDoctorId">Doctor (Optional):</label>
+                        <select id="opdDoctorId" class="form-control">
+                            <option value="">All Doctors</option>
+                        </select>
+                    </div>
+                    <button onclick="generateDailyOpdReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+                
+                <!-- Doctor Revenue Report Form -->
+                <div id="doctorRevenueForm" class="report-form" style="display: none;">
+                    <h4>Doctor Revenue Report</h4>
+                    <div class="form-group mb-3">
+                        <label for="revenueStartDate">Start Date:</label>
+                        <input type="date" id="revenueStartDate" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="revenueEndDate">End Date:</label>
+                        <input type="date" id="revenueEndDate" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="revenueDoctorId">Doctor (Optional):</label>
+                        <select id="revenueDoctorId" class="form-control">
+                            <option value="">All Doctors</option>
+                        </select>
+                    </div>
+                    <button onclick="generateDoctorRevenueReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+                
+                <!-- IPD Occupancy Report Form -->
+                <div id="ipdOccupancyForm" class="report-form" style="display: none;">
+                    <h4>IPD Occupancy Report</h4>
+                    <p>Current bed occupancy status</p>
+                    <button onclick="generateIpdOccupancyReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+                
+                <!-- Salary Report Form -->
+                <div id="salaryForm" class="report-form" style="display: none;">
+                    <h4>Salary Report</h4>
+                    <div class="form-group mb-3">
+                        <label for="salaryMonth">Month:</label>
+                        <select id="salaryMonth" class="form-control" required>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="salaryYear">Year:</label>
+                        <input type="number" id="salaryYear" class="form-control" min="2000" max="2100" required>
+                    </div>
+                    <button onclick="generateSalaryReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+                
+                <!-- Report Results -->
+                <div id="reportResults" style="margin-top: 30px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set default date to today
+document.getElementById('opdReportDate').valueAsDate = new Date();
+document.getElementById('revenueStartDate').valueAsDate = new Date();
+document.getElementById('revenueEndDate').valueAsDate = new Date();
+document.getElementById('salaryMonth').value = new Date().getMonth() + 1;
+document.getElementById('salaryYear').value = new Date().getFullYear();
+
+// Load doctors for dropdowns
+async function loadDoctors() {
+    try {
+        const response = await fetch('/api/v1/doctors/');
+        const doctors = await response.json();
+        
+        const opdSelect = document.getElementById('opdDoctorId');
+        const revenueSelect = document.getElementById('revenueDoctorId');
+        
+        doctors.forEach(doctor => {
+            const option1 = document.createElement('option');
+            option1.value = doctor.doctor_id;
+            option1.textContent = `${doctor.name} (${doctor.department})`;
+            opdSelect.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = doctor.doctor_id;
+            option2.textContent = `${doctor.name} (${doctor.department})`;
+            revenueSelect.appendChild(option2);
+        });
+    } catch (error) {
+        console.error('Error loading doctors:', error);
+    }
+}
+
+// Switch report forms
+document.getElementById('reportType').addEventListener('change', function() {
+    document.querySelectorAll('.report-form').forEach(form => form.style.display = 'none');
+    
+    const reportType = this.value;
+    if (reportType === 'daily-opd') {
+        document.getElementById('dailyOpdForm').style.display = 'block';
+    } else if (reportType === 'doctor-revenue') {
+        document.getElementById('doctorRevenueForm').style.display = 'block';
+    } else if (reportType === 'ipd-occupancy') {
+        document.getElementById('ipdOccupancyForm').style.display = 'block';
+    } else if (reportType === 'salary') {
+        document.getElementById('salaryForm').style.display = 'block';
+    }
+});
+
+// Generate Daily OPD Report
+async function generateDailyOpdReport() {
+    const reportDate = document.getElementById('opdReportDate').value;
+    const doctorId = document.getElementById('opdDoctorId').value;
+    
+    if (!reportDate) {
+        alert('Please select a report date');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/reports/daily-opd', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                report_date: reportDate,
+                doctor_id: doctorId || null
+            })
+        });
+        
+        const report = await response.json();
+        displayDailyOpdReport(report);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Generate Doctor Revenue Report
+async function generateDoctorRevenueReport() {
+    const startDate = document.getElementById('revenueStartDate').value;
+    const endDate = document.getElementById('revenueEndDate').value;
+    const doctorId = document.getElementById('revenueDoctorId').value;
+    
+    if (!startDate || !endDate) {
+        alert('Please select start and end dates');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/reports/doctor-revenue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                start_date: startDate,
+                end_date: endDate,
+                doctor_id: doctorId || null
+            })
+        });
+        
+        const report = await response.json();
+        displayDoctorRevenueReport(report);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Generate IPD Occupancy Report
+async function generateIpdOccupancyReport() {
+    try {
+        const response = await fetch('/api/v1/reports/ipd-occupancy');
+        const report = await response.json();
+        displayIpdOccupancyReport(report);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Generate Salary Report
+async function generateSalaryReport() {
+    const month = document.getElementById('salaryMonth').value;
+    const year = document.getElementById('salaryYear').value;
+    
+    if (!month || !year) {
+        alert('Please select month and year');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/reports/salary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                month: parseInt(month),
+                year: parseInt(year)
+            })
+        });
+        
+        const report = await response.json();
+        displaySalaryReport(report);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Display functions
+function displayDailyOpdReport(report) {
+    const html = `
+        <h4>Daily OPD Report - ${report.report_date}</h4>
+        <div class="alert alert-info">
+            <h5>Summary</h5>
+            <p><strong>Total Patients:</strong> ${report.summary.total_patients}</p>
+            <p><strong>New Patients:</strong> ${report.summary.new_patients}</p>
+            <p><strong>Follow-up Patients:</strong> ${report.summary.followup_patients}</p>
+            <p><strong>Total Collection:</strong> ₹${report.summary.total_collection.toFixed(2)}</p>
+        </div>
+        <h5>Doctor-wise Breakdown</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Department</th>
+                    <th>Total Patients</th>
+                    <th>New</th>
+                    <th>Follow-up</th>
+                    <th>Collection</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${report.doctor_wise.map(doc => `
+                    <tr>
+                        <td>${doc.doctor_name}</td>
+                        <td>${doc.department}</td>
+                        <td>${doc.total_patients}</td>
+                        <td>${doc.new_patients}</td>
+                        <td>${doc.followup_patients}</td>
+                        <td>₹${doc.collection.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+function displayDoctorRevenueReport(report) {
+    const html = `
+        <h4>Doctor Revenue Report</h4>
+        <p>${report.start_date} to ${report.end_date}</p>
+        <div class="alert alert-success">
+            <h5>Total Revenue: ₹${report.total_revenue.toFixed(2)}</h5>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Department</th>
+                    <th>Total Patients</th>
+                    <th>New</th>
+                    <th>Follow-up</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${report.doctor_wise_revenue.map(doc => `
+                    <tr>
+                        <td>${doc.doctor_name}</td>
+                        <td>${doc.department}</td>
+                        <td>${doc.total_patients}</td>
+                        <td>${doc.new_patients}</td>
+                        <td>${doc.followup_patients}</td>
+                        <td>₹${doc.opd_revenue.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+function displayIpdOccupancyReport(report) {
+    const html = `
+        <h4>IPD Occupancy Report</h4>
+        <div class="alert alert-info">
+            <h5>Summary</h5>
+            <p><strong>Total Beds:</strong> ${report.summary.total_beds}</p>
+            <p><strong>Occupied:</strong> ${report.summary.occupied}</p>
+            <p><strong>Available:</strong> ${report.summary.available}</p>
+            <p><strong>Maintenance:</strong> ${report.summary.maintenance}</p>
+            <p><strong>Occupancy Rate:</strong> ${report.summary.occupancy_rate}%</p>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Bed Number</th>
+                    <th>Ward Type</th>
+                    <th>Status</th>
+                    <th>Patient</th>
+                    <th>Days Admitted</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${report.beds.map(bed => `
+                    <tr>
+                        <td>${bed.bed_number}</td>
+                        <td>${bed.ward_type}</td>
+                        <td><span class="badge bg-${bed.status === 'OCCUPIED' ? 'danger' : bed.status === 'AVAILABLE' ? 'success' : 'warning'}">${bed.status}</span></td>
+                        <td>${bed.patient ? `${bed.patient.name} (${bed.patient.patient_id})` : '-'}</td>
+                        <td>${bed.patient ? bed.patient.days_admitted : '-'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+function displaySalaryReport(report) {
+    const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+    const html = `
+        <h4>Salary Report - ${months[report.month]} ${report.year}</h4>
+        <div class="alert alert-success">
+            <h5>Summary</h5>
+            <p><strong>Total Employees:</strong> ${report.total_employees}</p>
+            <p><strong>Total Salary:</strong> ₹${report.total_salary.toFixed(2)}</p>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Post</th>
+                    <th>Status</th>
+                    <th>Duty Hours</th>
+                    <th>Monthly Salary</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${report.employees.map(emp => `
+                    <tr>
+                        <td>${emp.employee_id}</td>
+                        <td>${emp.name}</td>
+                        <td>${emp.post}</td>
+                        <td>${emp.employment_status}</td>
+                        <td>${emp.duty_hours}</td>
+                        <td>₹${emp.monthly_salary.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+// Load doctors on page load
+loadDoctors();
+</script>
+{% endblock %}

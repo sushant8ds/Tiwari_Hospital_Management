@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/schemas/visit.py
+# hypothesis_version: 6.151.5
+
+['CARD', 'CASH', 'Doctor ID', 'OPD_FOLLOWUP', 'OPD_NEW', 'Patient ID', 'UPI', 'payment_mode', 'visit_type']

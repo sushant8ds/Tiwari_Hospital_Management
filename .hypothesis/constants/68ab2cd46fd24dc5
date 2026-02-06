@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/crud/billing.py
+# hypothesis_version: 6.151.5
+
+[3600, '0.01', 'IPD record not found', 'Visit not found', 'end_time', 'name', 'quantity', 'rate', 'start_time']

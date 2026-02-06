@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/main.py
+# hypothesis_version: 6.151.5
+
+[8000, '*', '/', '/api/v1', '/health', '/static', '0.0.0.0', '1.0.0', '__main__', 'app.main:app', 'development', 'healthy', 'hospital_address', 'hospital_name', 'hospital_phone', 'index.html', 'request', 'service', 'static', 'status', 'templates', 'version']

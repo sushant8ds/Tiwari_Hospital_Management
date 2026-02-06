@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/auth.py
+# hypothesis_version: 6.151.5
+
+['/login', '/logout', '/profile', '/register', 'ADMIN', 'Bearer', 'WWW-Authenticate', 'access_token', 'bearer', 'message', 'sub', 'token_type']

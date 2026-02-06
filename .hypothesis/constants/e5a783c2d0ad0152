@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/crud/payment.py
+# hypothesis_version: 6.151.5
+
+['0.00', '0.01', 'CARD', 'CASH', 'IPD record not found', 'PAY', 'Patient not found', 'UPI', 'Visit not found', 'advance_balance', 'balance_due', 'patient_id', 'total_charges', 'total_paid']

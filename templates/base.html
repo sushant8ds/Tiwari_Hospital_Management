@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ hospital_name }}{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', path='/css/style.css') }}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Header - Sticky -->
+    <header class="header-top" id="mainHeader">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <!-- Hospital Logo + Name (left) -->
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ url_for('static', path='/images/hospital_logo.png') }}" 
+                             alt="Surya City Hospital Logo" 
+                             class="hospital-logo-img me-3"
+                             style="max-height: 50px !important; max-width: 150px !important; height: auto !important; width: auto !important; object-fit: contain !important;"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', path='/images/hospital_logo.svg') }}'; this.onerror=function(){this.style.display='none'};">
+                        <div>
+                            <div class="hospital-logo">
+                                {{ hospital_name }}
+                            </div>
+                            <small class="text-muted">{{ hospital_address }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Current Module (center) -->
+                <div class="col-md-4 text-center">
+                    <div class="current-module">
+                        {% block module_name %}Dashboard{% endblock %}
+                    </div>
+                </div>
+                
+                <!-- User Info (right) -->
+                <div class="col-md-4 text-end">
+                    <div class="user-info-box">
+                        <div class="d-flex align-items-center justify-content-end">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <span id="current-user">Admin User</span>
+                            <span class="badge badge-yellow ms-2">ADMIN</span>
+                        </div>
+                        <div class="mt-1">
+                            <small id="current-time"></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar - Professional Boxed Design -->
+            <nav class="sidebar">
+                <ul class="sidebar-menu">
+                    <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a></li>
+                    <li><a href="/opd/new" class="{% if '/opd/new' in request.path %}active{% endif %}">OPD</a></li>
+                    <li><a href="/opd/followup" class="{% if '/opd/followup' in request.path %}active{% endif %}">Follow-up</a></li>
+                    <li><a href="/ipd/admit" class="{% if '/ipd' in request.path %}active{% endif %}">IPD</a></li>
+                    <li><a href="/billing/investigations" class="{% if '/billing' in request.path %}active{% endif %}">Billing</a></li>
+                    <li><a href="/reports/daily" class="{% if '/reports' in request.path %}active{% endif %}">Reports</a></li>
+                </ul>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Container for Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Base JavaScript -->
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true,
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        updateTime();
+        setInterval(updateTime, 60000); // Update every minute
+        
+        // Add shadow to header on scroll
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('mainHeader');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+        
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 150);
+            }, 3000);
+        }
+        
+        // Make showToast globally available
+        window.showToast = showToast;
+    </script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', path='/js/app.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

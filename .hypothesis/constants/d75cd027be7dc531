@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/crud/ipd.py
+# hypothesis_version: 6.151.5
+
+[100, '0.01', 'Bed not found', 'Error changing bed', 'Error creating bed', 'New bed not found', 'Patient not found', 'Visit not found', 'available', 'by_ward_type', 'maintenance', 'occupancy_rate', 'occupied', 'total', 'total_beds']

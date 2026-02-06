@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/audit.py
+# hypothesis_version: 6.151.5
+
+['MANUAL_CHARGE_ADD', 'MANUAL_CHARGE_EDIT', 'RATE_CHANGE', 'audit_logs']

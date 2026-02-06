@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/payment.py
+# hypothesis_version: 6.151.5
+
+[100, 'COMPLETED', 'DISCHARGE', 'FAILED', 'INVESTIGATION', 'IPD', 'IPD_ADVANCE', 'MANUAL', 'OPD_FEE', 'OT', 'PENDING', 'PROCEDURE', 'Patient', 'REFUNDED', 'SERVICE', 'Visit', 'ipd.ipd_id', 'patients.patient_id', 'payments', 'visits.visit_id']

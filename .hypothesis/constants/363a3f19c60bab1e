@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/slips.py
+# hypothesis_version: 6.151.5
+
+['/generate/procedure', '/generate/service', '/ipd/{ipd_id}', '/reprint/{slip_id}', '/visit/{visit_id}', '/{slip_id}', 'Slip not found']

@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/utils/validators.py
+# hypothesis_version: 6.151.5
+
+[150, '^IPD\\d{8}\\d{4}$', '^P\\d{8}\\d{4}$', '^V\\d{8}\\d{6}\\d{3}$', '^[6-9]\\d{9}$']

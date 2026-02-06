@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/core/config.py
+# hypothesis_version: 6.151.5
+
+['+91-1234567890', '.env', 'HS256', 'default', 'development', 'thermal']

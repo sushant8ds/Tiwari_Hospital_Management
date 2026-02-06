@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/__init__.py
+# hypothesis_version: 6.151.5
+
+['AuditLog', 'Base', 'Bed', 'BillingCharge', 'Doctor', 'Employee', 'IPD', 'Patient', 'User', 'Visit']

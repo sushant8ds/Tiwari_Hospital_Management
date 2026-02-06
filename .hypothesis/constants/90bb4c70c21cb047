@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/bed.py
+# hypothesis_version: 6.151.5
+
+['AVAILABLE', 'GENERAL', 'IPD', 'MAINTENANCE', 'OCCUPIED', 'PRIVATE', 'SEMI_PRIVATE', 'bed', 'beds']

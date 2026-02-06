@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/main.py
+# hypothesis_version: 6.151.5
+
+[8000, '*', '/', '/api/v1', '/health', '/ipd/admit', '/opd/followup', '/opd/new', '/opd/search', '/patients/register', '/reports/daily', '/static', '0.0.0.0', '1.0.0', '__main__', 'app.main:app', 'development', 'healthy', 'hospital_address', 'hospital_name', 'hospital_phone', 'index.html', 'ipd/admit.html', 'opd/followup.html', 'opd/new.html', 'opd/search.html', 'patient_id', 'reports/daily.html', 'request', 'service', 'static', 'status', 'templates', 'version']

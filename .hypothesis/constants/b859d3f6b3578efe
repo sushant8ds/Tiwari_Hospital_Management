@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/ot.py
+# hypothesis_version: 6.151.5
+
+[100, 200, 'IPD', 'ipd.ipd_id', 'ot_procedures']

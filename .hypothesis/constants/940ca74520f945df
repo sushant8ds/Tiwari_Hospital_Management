@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/ot.py
+# hypothesis_version: 6.151.5
+
+['/procedures', '/procedures/{ot_id}', '/{ot_id}/charges']

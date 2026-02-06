@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/crud/discharge.py
+# hypothesis_version: 6.151.5
+
+['0.00', 'FILE_CHARGE', 'IPD File Charge', 'IPD record not found', 'OPD Consultation Fee', 'OPD_FEE', 'address', 'admission', 'admission_date', 'advance_paid', 'age', 'amount', 'balance_due', 'charges_by_type', 'date', 'days', 'discharge_date', 'gender', 'generated_date', 'id', 'ipd_id', 'mobile', 'mode', 'name', 'patient', 'payment_id', 'payments', 'quantity', 'rate', 'reference', 'summary', 'total', 'total_charges', 'total_paid', 'type']

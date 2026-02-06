@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/employees.py
+# hypothesis_version: 6.151.5
+
+[100, '/', '/salary-slip', '/{employee_id}', 'Employee not found']

@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/ipd.py
+# hypothesis_version: 6.151.5
+
+['ADMITTED', 'Bed', 'BillingCharge', 'DISCHARGED', 'Patient', 'TRANSFERRED', 'Visit', 'beds.bed_id', 'ipd', 'ipd_admission', 'ipd_admissions', 'patients.patient_id', 'visits.visit_id']

@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+
+{% block title %}Billing - Investigations - {{ hospital_name }}{% endblock %}
+
+{% block module_name %}Billing - Investigations{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-vial me-2"></i>Billing - Investigations & Charges</h2>
+        <p class="text-muted">Add investigations, procedures, and other charges to patient visits</p>
+        <hr>
+    </div>
+</div>
+
+<!-- Step 1: Search Patient/Visit -->
+<div class="row mb-4" id="step1-search">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-search me-2"></i>Step 1: Search Patient
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="patientSearch" class="required">Patient ID or Mobile Number</label>
+                    <div class="input-group">
+                        <input type="text" 
+                               class="form-control search-input" 
+                               id="patientSearch" 
+                               placeholder="Enter Patient ID or Mobile Number"
+                               autofocus>
+                        <button class="btn btn-primary" type="button" id="searchBtn">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                    <small class="text-muted">Search for patient to add charges</small>
+                </div>
+                
+                <div id="patientResult" class="mt-3" style="display: none;">
+                    <!-- Patient details will be shown here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Step 2: Add Charges -->
+<div class="row" id="step2-charges" style="display: none;">
+    <div class="col-md-10 offset-md-1">
+        <!-- Patient Summary -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 id="patientName"></h5>
+                        <p class="mb-0"><strong>Patient ID:</strong> <span id="patientId"></span></p>
+                        <p class="mb-0"><strong>Visit Type:</strong> <span id="visitType"></span></p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn btn-secondary" id="backBtn">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charge Entry Form -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="fas fa-plus me-2"></i>Add Charges
+            </div>
+            <div class="card-body">
+                <form id="chargeForm">
+                    <input type="hidden" id="selectedVisitId">
+                    <input type="hidden" id="selectedIpdId">
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="chargeType" class="required">Charge Type</label>
+                                <select class="form-select" id="chargeType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="INVESTIGATION">Investigation</option>
+                                    <option value="PROCEDURE">Procedure</option>
+                                    <option value="SERVICE">Service</option>
+                                    <option value="MANUAL">Manual Charge</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="chargeName" class="required">Charge Name</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="chargeName" 
+                                       placeholder="e.g., Blood Test, X-Ray"
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="quantity" class="required">Quantity</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="quantity" 
+                                       value="1" 
+                                       min="1" 
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="rate" class="required">Rate (₹)</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="rate" 
+                                       placeholder="0.00" 
+                                       min="0" 
+                                       step="0.01" 
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Charges List -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-list me-2"></i>Charges Added</span>
+                <span class="badge bg-primary" id="chargeCount">0 items</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Charge Name</th>
+                                <th>Qty</th>
+                                <th>Rate</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chargesTable">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No charges added yet</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th colspan="4" class="text-end">Total:</th>
+                                <th id="totalAmount">₹0.00</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="paymentMode" class="required">Payment Mode</label>
+                                <select class="form-select" id="paymentMode" required>
+                                    <option value="CASH">Cash</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="CARD">Card</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end d-flex align-items-end">
+                            <button class="btn btn-success btn-lg w-100" id="saveChargesBtn" disabled>
+                                <i class="fas fa-save me-2"></i>Save Charges & Record Payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedPatient = null;
+let selectedVisit = null;
+let charges = [];
+
+// Search on Enter key
+document.getElementById('patientSearch').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchPatient();
+    }
+});
+
+document.getElementById('searchBtn').addEventListener('click', searchPatient);
+
+async function searchPatient() {
+    const query = document.getElementById('patientSearch').value.trim();
+    
+    if (!query) {
+        showToast('Please enter Patient ID or Mobile Number', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/v1/patients/search?query=${encodeURIComponent(query)}`);
+        
+        if (!response.ok) {
+            throw new Error('Patient not found');
+        }
+        
+        const patients = await response.json();
+        
+        if (patients.length === 0) {
+            showToast('No patient found', 'error');
+            return;
+        }
+        
+        selectedPatient = patients[0];
+        await loadPatientVisits(selectedPatient.patient_id);
+        
+    } catch (error) {
+        console.error('Error searching patient:', error);
+        showToast('Error searching for patient', 'error');
+    }
+}
+
+async function loadPatientVisits(patientId) {
+    try {
+        // Try to get recent visits
+        const response = await fetch(`/api/v1/visits/patient/${patientId}`);
+        const visits = await response.json();
+        
+        displayPatientInfo(selectedPatient, visits);
+        
+    } catch (error) {
+        console.error('Error loading visits:', error);
+        displayPatientInfo(selectedPatient, []);
+    }
+}
+
+function displayPatientInfo(patient, visits) {
+    const resultDiv = document.getElementById('patientResult');
+    
+    let visitsHtml = '';
+    if (visits.length > 0) {
+        const recentVisit = visits[0];
+        selectedVisit = recentVisit;
+        
+        const visitDate = new Date(recentVisit.created_date).toLocaleDateString();
+        const visitType = recentVisit.visit_type === 'OPD_NEW' ? 'New OPD' : 'Follow-up';
+        
+        visitsHtml = `
+            <div class="alert alert-info mt-2">
+                <strong>Recent Visit:</strong> ${visitType} on ${visitDate}
+                <br><strong>Doctor:</strong> ${recentVisit.doctor ? recentVisit.doctor.name : 'N/A'}
+            </div>
+        `;
+    }
+    
+    resultDiv.innerHTML = `
+        <div class="patient-summary-card alert alert-success">
+            <h5><i class="fas fa-user-check me-2"></i>Patient Found</h5>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <p><strong>Patient ID:</strong> ${patient.patient_id}</p>
+                    <p><strong>Name:</strong> ${patient.name}</p>
+                    <p><strong>Age/Gender:</strong> ${patient.age} years / ${patient.gender}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Mobile:</strong> ${patient.mobile_number}</p>
+                    <p><strong>Address:</strong> ${patient.address || 'N/A'}</p>
+                </div>
+            </div>
+            ${visitsHtml}
+            <button type="button" class="btn btn-primary mt-2" id="proceedBtn">
+                <i class="fas fa-arrow-right me-2"></i>Proceed to Add Charges
+            </button>
+        </div>
+    `;
+    
+    resultDiv.style.display = 'block';
+    
+    document.getElementById('proceedBtn').addEventListener('click', showChargesForm);
+}
+
+function showChargesForm() {
+    document.getElementById('step1-search').style.display = 'none';
+    document.getElementById('step2-charges').style.display = 'block';
+    
+    // Set patient info
+    document.getElementById('patientName').textContent = selectedPatient.name;
+    document.getElementById('patientId').textContent = selectedPatient.patient_id;
+    
+    if (selectedVisit) {
+        document.getElementById('visitType').textContent = selectedVisit.visit_type === 'OPD_NEW' ? 'OPD - New' : 'OPD - Follow-up';
+        document.getElementById('selectedVisitId').value = selectedVisit.visit_id;
+    } else {
+        document.getElementById('visitType').textContent = 'No recent visit';
+    }
+    
+    // Reset charges
+    charges = [];
+    updateChargesTable();
+    
+    document.getElementById('step2-charges').scrollIntoView({ behavior: 'smooth' });
+}
+
+document.getElementById('backBtn').addEventListener('click', function() {
+    document.getElementById('step2-charges').style.display = 'none';
+    document.getElementById('step1-search').style.display = 'block';
+    document.getElementById('chargeForm').reset();
+    charges = [];
+});
+
+// Add charge to list
+document.getElementById('chargeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const chargeType = document.getElementById('chargeType').value;
+    const chargeName = document.getElementById('chargeName').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
+    const rate = parseFloat(document.getElementById('rate').value);
+    
+    if (!chargeType || !chargeName || !quantity || !rate) {
+        showToast('Please fill all fields', 'error');
+        return;
+    }
+    
+    const charge = {
+        charge_type: chargeType,
+        charge_name: chargeName,
+        quantity: quantity,
+        rate: rate,
+        total_amount: quantity * rate
+    };
+    
+    charges.push(charge);
+    updateChargesTable();
+    
+    // Reset form except charge type
+    document.getElementById('chargeName').value = '';
+    document.getElementById('quantity').value = '1';
+    document.getElementById('rate').value = '';
+    document.getElementById('chargeName').focus();
+    
+    showToast('Charge added to list', 'success');
+});
+
+function updateChargesTable() {
+    const tbody = document.getElementById('chargesTable');
+    const countBadge = document.getElementById('chargeCount');
+    const saveBtn = document.getElementById('saveChargesBtn');
+    
+    if (charges.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No charges added yet</td></tr>';
+        countBadge.textContent = '0 items';
+        saveBtn.disabled = true;
+    } else {
+        tbody.innerHTML = charges.map((charge, index) => `
+            <tr>
+                <td><span class="badge bg-info">${charge.charge_type}</span></td>
+                <td>${charge.charge_name}</td>
+                <td>${charge.quantity}</td>
+                <td>₹${charge.rate.toFixed(2)}</td>
+                <td>₹${charge.total_amount.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="removeCharge(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+        countBadge.textContent = `${charges.length} item${charges.length > 1 ? 's' : ''}`;
+        saveBtn.disabled = false;
+    }
+    
+    // Update total
+    const total = charges.reduce((sum, charge) => sum + charge.total_amount, 0);
+    document.getElementById('totalAmount').textContent = `₹${total.toFixed(2)}`;
+}
+
+function removeCharge(index) {
+    charges.splice(index, 1);
+    updateChargesTable();
+    showToast('Charge removed', 'success');
+}
+
+// Save all charges
+document.getElementById('saveChargesBtn').addEventListener('click', async function() {
+    const visitId = document.getElementById('selectedVisitId').value;
+    const paymentMode = document.getElementById('paymentMode').value;
+    
+    if (!visitId) {
+        showToast('No visit selected. Please register patient first.', 'error');
+        return;
+    }
+    
+    if (charges.length === 0) {
+        showToast('No charges to save', 'error');
+        return;
+    }
+    
+    const saveBtn = this;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="btn-spinner me-2"></span>Saving...';
+    
+    try {
+        // Calculate total amount
+        const totalAmount = charges.reduce((sum, charge) => sum + charge.total_amount, 0);
+        
+        // Group charges by type
+        const chargesByType = {
+            INVESTIGATION: [],
+            PROCEDURE: [],
+            SERVICE: [],
+            MANUAL: []
+        };
+        
+        charges.forEach(charge => {
+            chargesByType[charge.charge_type].push({
+                charge_name: charge.charge_name,
+                quantity: charge.quantity,
+                rate: charge.rate
+            });
+        });
+        
+        // Save each type
+        for (const [type, typeCharges] of Object.entries(chargesByType)) {
+            if (typeCharges.length > 0) {
+                const endpoint = type.toLowerCase() + 's';
+                const response = await fetch(`/api/v1/billing/${visitId}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(typeCharges)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || `Failed to save ${type} charges`);
+                }
+            }
+        }
+        
+        // Record payment for the total amount
+        const paymentResponse = await fetch('/api/v1/payments/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                patient_id: selectedPatient.patient_id,
+                visit_id: visitId,
+                amount: totalAmount,
+                payment_mode: paymentMode,
+                payment_type: 'INVESTIGATION',
+                created_by: 'SYSTEM'
+            })
+        });
+        
+        if (!paymentResponse.ok) {
+            const error = await paymentResponse.json();
+            throw new Error(error.detail || 'Failed to record payment');
+        }
+        
+        showToast('Charges saved and payment recorded successfully!', 'success');
+        
+        // Reset and go back
+        setTimeout(() => {
+            charges = [];
+            updateChargesTable();
+            document.getElementById('step2-charges').style.display = 'none';
+            document.getElementById('step1-search').style.display = 'block';
+            document.getElementById('patientSearch').value = '';
+            document.getElementById('patientSearch').focus();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error saving charges:', error);
+        showToast(error.message || 'Error saving charges', 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+    }
+});
+</script>
+{% endblock %}

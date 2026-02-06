@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/services/barcode_service.py
+# hypothesis_version: 6.151.5
+
+['PNG', 'black', 'code128', 'white']

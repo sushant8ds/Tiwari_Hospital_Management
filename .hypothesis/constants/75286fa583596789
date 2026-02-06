@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/schemas/doctor.py
+# hypothesis_version: 6.151.5
+
+['ACTIVE', 'followup_fee', 'new_patient_fee']

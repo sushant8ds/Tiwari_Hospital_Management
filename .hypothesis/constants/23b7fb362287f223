@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/schemas/ot.py
+# hypothesis_version: 6.151.5
+
+['0.00', 'anesthesia_charge', 'assistant_charge', 'duration_minutes', 'facility_charge', 'operation_name', 'surgeon_charge', 'surgeon_name']

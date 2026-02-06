@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/api.py
+# hypothesis_version: 6.151.5
+
+['/audit', '/auth', '/backup', '/billing', '/discharge', '/doctors', '/employees', '/ipd', '/ot', '/patients', '/payments', '/reports', '/slips', '/visits', 'audit', 'authentication', 'backup', 'billing', 'discharge', 'doctors', 'employees', 'ipd', 'operation-theater', 'patients', 'payments', 'reports', 'slips', 'visits']

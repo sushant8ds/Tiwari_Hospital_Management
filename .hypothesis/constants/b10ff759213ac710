@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/schemas/patient.py
+# hypothesis_version: 6.151.5
+
+[150, '^[6-9]\\d{9}$', 'age', 'mobile_number']

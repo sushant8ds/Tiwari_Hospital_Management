@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/core/dependencies.py
+# hypothesis_version: 6.151.5
+
+['Bearer', 'Inactive user', 'WWW-Authenticate', 'api/v1/auth/login', 'sub']

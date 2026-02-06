@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/crud/slip.py
+# hypothesis_version: 6.151.5
+
+['Discharge Bill', 'INVESTIGATION', 'IPD record not found', 'Investigation', 'N/A', 'OPD Registration', 'OT', 'Operation Theater', 'PROCEDURE', 'Procedure', 'SERVICE', 'SLIP', 'Service', 'Visit not found', 'address', 'admission_date', 'age', 'amount', 'balance_due', 'barcode_data', 'charges', 'charges_by_type', 'date', 'department', 'discharge_date', 'doctor', 'file_charge', 'gender', 'generated_date', 'hospital_name', 'id', 'investigations', 'ipd', 'ipd_id', 'mobile', 'mode', 'name', 'opd_fee', 'ot_charges', 'patient', 'payment_mode', 'payments', 'procedures', 'quantity', 'rate', 'serial_number', 'services', 'slip_type', 'summary', 'time', 'total', 'total_amount', 'total_charges', 'total_paid', 'type', 'visit']

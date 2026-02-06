@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ hospital_name }}{% endblock %}
+
+{% block module_name %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Quick Stats Cards - WITH TOP ACCENT STRIP -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-card accent-blue">
+            <h4>Today's OPD</h4>
+            <h2 class="count-up" id="today-opd-count">0</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card accent-green">
+            <h4>IPD Patients</h4>
+            <h2 class="count-up" id="ipd-count">0</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card accent-indigo">
+            <h4>Available Beds</h4>
+            <h2 class="count-up" id="available-beds">0</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card accent-emerald">
+            <h4>Today's Collection</h4>
+            <h2 class="count-up" id="today-collection">₹0</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions - REAL BUTTONS WITH HIERARCHY -->
+<div class="mb-4">
+    <h4 class="mb-3" style="font-size: 18px; font-weight: 600;">Quick Actions</h4>
+    <div class="quick-actions-grid">
+        <!-- Primary Actions (Daily Use) -->
+        <a href="/opd/new" class="action-btn-primary">
+            New OPD
+        </a>
+        <a href="/opd/followup" class="action-btn-success">
+            Follow-up
+        </a>
+        <a href="/ipd/admit" class="action-btn-indigo">
+            IPD Admit
+        </a>
+        
+        <!-- Secondary Actions (Outlined) -->
+        <a href="/billing/investigations" class="action-btn-secondary">
+            Investigations
+        </a>
+        <a href="/opd/search" class="action-btn-secondary">
+            Search Patient
+        </a>
+        <a href="/reports/daily" class="action-btn-secondary">
+            Reports
+        </a>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Recent OPD Registrations
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-opd">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                IPD Status
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Bed</th>
+                                <th>Patient</th>
+                                <th>Admission Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ipd-status">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Count-up animation function (300ms duration)
+function animateCount(element, target) {
+    const duration = 300;
+    const start = 0;
+    const increment = target / (duration / 16); // 60fps
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            element.textContent = Math.round(target);
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.round(current);
+        }
+    }, 16);
+}
+
+// Count-up for currency (with ₹ symbol)
+function animateCountCurrency(element, target) {
+    const duration = 300;
+    const start = 0;
+    const increment = target / (duration / 16);
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            element.textContent = `₹${target.toFixed(2)}`;
+            clearInterval(timer);
+        } else {
+            element.textContent = `₹${current.toFixed(2)}`;
+        }
+    }, 16);
+}
+
+// Load dashboard statistics
+async function loadDashboardStats() {
+    try {
+        const response = await fetch('/api/v1/dashboard/stats');
+        const stats = await response.json();
+        
+        // Animate numbers with count-up effect
+        animateCount(document.getElementById('today-opd-count'), stats.today_opd_count || 0);
+        animateCount(document.getElementById('ipd-count'), stats.ipd_count || 0);
+        animateCount(document.getElementById('available-beds'), stats.available_beds || 0);
+        animateCountCurrency(document.getElementById('today-collection'), stats.today_collection || 0);
+        
+    } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        // Set to 0 if error
+        document.getElementById('today-opd-count').textContent = '0';
+        document.getElementById('ipd-count').textContent = '0';
+        document.getElementById('available-beds').textContent = '0';
+        document.getElementById('today-collection').textContent = '₹0.00';
+    }
+}
+
+// Load recent OPD registrations
+async function loadRecentOPD() {
+    try {
+        const response = await fetch('/api/v1/visits/recent/list?limit=5');
+        const visits = await response.json();
+        
+        const tbody = document.getElementById('recent-opd');
+        if (visits.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No recent registrations</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = visits.map(visit => {
+            const time = new Date(visit.created_date).toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            const patientName = visit.patient ? visit.patient.name : 'N/A';
+            const doctorName = visit.doctor ? visit.doctor.name : 'N/A';
+            const visitType = visit.visit_type === 'OPD_NEW' ? 'New' : 'Follow-up';
+            const badgeClass = visit.visit_type === 'OPD_NEW' ? 'badge-new' : 'badge-followup';
+            
+            return `
+                <tr>
+                    <td>${time}</td>
+                    <td>${patientName}</td>
+                    <td>${doctorName}</td>
+                    <td><span class="badge ${badgeClass}">${visitType}</span></td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading recent OPD:', error);
+    }
+}
+
+// Load active IPD patients
+async function loadIPDStatus() {
+    try {
+        const response = await fetch('/api/v1/ipd/active/list');
+        
+        // Check if authentication is required
+        if (response.status === 401) {
+            const tbody = document.getElementById('ipd-status');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Login required to view IPD status</td></tr>';
+            return;
+        }
+        
+        const admissions = await response.json();
+        
+        const tbody = document.getElementById('ipd-status');
+        if (admissions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No IPD patients</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = admissions.slice(0, 5).map(admission => {
+            const bedNumber = admission.bed ? admission.bed.bed_number : 'N/A';
+            const patientName = admission.patient ? admission.patient.name : 'N/A';
+            const admissionDate = new Date(admission.admission_date).toLocaleDateString('en-US');
+            const status = admission.status;
+            const badgeClass = status === 'ADMITTED' ? 'badge-admitted' : status === 'DISCHARGED' ? 'badge-discharged' : 'bg-info';
+            
+            return `
+                <tr>
+                    <td>${bedNumber}</td>
+                    <td>${patientName}</td>
+                    <td>${admissionDate}</td>
+                    <td><span class="badge ${badgeClass}">${status}</span></td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading IPD status:', error);
+        const tbody = document.getElementById('ipd-status');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Unable to load IPD status</td></tr>';
+    }
+}
+
+// Update dashboard data
+function updateDashboard() {
+    loadDashboardStats();
+    loadRecentOPD();
+    loadIPDStatus();
+}
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    updateDashboard();
+    // Refresh every 30 seconds
+    setInterval(updateDashboard, 30000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/ipd.py
+# hypothesis_version: 6.151.5
+
+[400, 403, 404, 500, '/active/list', '/admit', '/beds', '/beds/available', '/beds/occupancy', '/beds/{bed_id}', '/{ipd_id}', '/{ipd_id}/change-bed', '/{ipd_id}/discharge', 'ADMIN', 'Bed not found', 'ipd_id', 'total_bed_charges']

@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/crud/employee.py
+# hypothesis_version: 6.151.5
+
+[100, 2000, 2100, '0.00', '0.01', 'EMP', 'Employee not found', 'Invalid month', 'Invalid year', 'basic_salary', 'deductions', 'duty_hours', 'employee_id', 'employee_name', 'employment_status', 'generated_date', 'gross_salary', 'joining_date', 'month', 'net_salary', 'post', 'year']

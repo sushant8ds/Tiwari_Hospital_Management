@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/slip.py
+# hypothesis_version: 6.151.5
+
+[100, 'A4', 'DISCHARGE', 'INVESTIGATION', 'IPD', 'OPD', 'OT', 'PROCEDURE', 'Patient', 'SERVICE', 'THERMAL', 'Visit', 'ipd.ipd_id', 'patients.patient_id', 'slips', 'visits.visit_id']

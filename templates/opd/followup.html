@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}OPD Follow-up - {{ hospital_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-user-check me-2"></i>OPD Follow-up Registration</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Search Patient</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="searchInput" class="form-label">Search by Patient ID or Mobile Number</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Enter Patient ID or Mobile">
+                        <button class="btn btn-primary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+
+                <div id="patientInfo" style="display: none;">
+                    <hr>
+                    <h6>Patient Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Name:</strong> <span id="patientName"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Age:</strong> <span id="patientAge"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Gender:</strong> <span id="patientGender"></span>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6>Follow-up Visit</h6>
+                    <form id="followupForm">
+                        <input type="hidden" id="patientId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="doctor" class="form-label">Doctor *</label>
+                                <select class="form-select" id="doctor" required>
+                                    <option value="">Select Doctor</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="paymentMode" class="form-label">Payment Mode *</label>
+                                <select class="form-select" id="paymentMode" required>
+                                    <option value="CASH">Cash</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="CARD">Card</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-secondary" onclick="location.reload()">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>Register Follow-up
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6><i class="fas fa-info-circle me-2"></i>Instructions</h6>
+                <ul class="small">
+                    <li>Search for existing patient using Patient ID or Mobile Number</li>
+                    <li>Follow-up fee is usually lower than new patient fee</li>
+                    <li>Patient will receive a printed slip</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load doctors
+async function loadDoctors() {
+    try {
+        const response = await fetch('/api/v1/doctors/');
+        const doctors = await response.json();
+        const select = document.getElementById('doctor');
+        doctors.forEach(doctor => {
+            const option = document.createElement('option');
+            option.value = doctor.doctor_id;
+            option.textContent = `Dr. ${doctor.name} - ${doctor.department}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading doctors:', error);
+    }
+}
+
+// Search patient
+document.getElementById('searchBtn').addEventListener('click', async function() {
+    const searchTerm = document.getElementById('searchInput').value.trim();
+    if (!searchTerm) {
+        alert('Please enter Patient ID or Mobile Number');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/patients/search?query=${searchTerm}`);
+        if (response.ok) {
+            const patients = await response.json();
+            if (patients.length > 0) {
+                const patient = patients[0];
+                document.getElementById('patientId').value = patient.patient_id;
+                document.getElementById('patientName').textContent = patient.name;
+                document.getElementById('patientAge').textContent = patient.age;
+                document.getElementById('patientGender').textContent = patient.gender;
+                document.getElementById('patientInfo').style.display = 'block';
+            } else {
+                alert('Patient not found');
+            }
+        } else {
+            alert('Error searching patient');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error searching patient');
+    }
+});
+
+// Handle form submission
+document.getElementById('followupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        patient_id: document.getElementById('patientId').value,
+        doctor_id: document.getElementById('doctor').value,
+        payment_mode: document.getElementById('paymentMode').value
+    };
+
+    try {
+        const response = await fetch('/api/v1/visits/opd/followup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            alert('Follow-up registered successfully! Visit ID: ' + result.visit_id);
+            window.location.href = '/';
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.detail || 'Registration failed'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error registering follow-up');
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    loadDoctors();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/payments.py
+# hypothesis_version: 6.151.5
+
+['/', '/ipd/{ipd_id}', '/visit/{visit_id}', '/{payment_id}', 'Payment not found', 'payments', 'total_paid']

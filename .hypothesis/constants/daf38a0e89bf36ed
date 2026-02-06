@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/billing.py
+# hypothesis_version: 6.151.5
+
+[100, 'BED', 'INVESTIGATION', 'IPD', 'MANUAL', 'OT', 'PROCEDURE', 'SERVICE', 'Visit', 'billing_charges', 'ipd.ipd_id', 'visits.visit_id']

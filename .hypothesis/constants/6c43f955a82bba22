@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/models/visit.py
+# hypothesis_version: 6.151.5
+
+['ACTIVE', 'BillingCharge', 'CANCELLED', 'CARD', 'CASH', 'COMPLETED', 'Doctor', 'IPD', 'OPD_FOLLOWUP', 'OPD_NEW', 'Patient', 'Payment', 'UPI', 'doctors.doctor_id', 'patients.patient_id', 'visit', 'visits']

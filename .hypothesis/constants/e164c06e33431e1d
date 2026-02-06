@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/ipd.py
+# hypothesis_version: 6.151.5
+
+['/admit', '/occupancy/status', '/{ipd_id}', '/{ipd_id}/discharge']

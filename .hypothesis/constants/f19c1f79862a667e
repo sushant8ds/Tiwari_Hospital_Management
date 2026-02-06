@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/schemas/slip.py
+# hypothesis_version: 6.151.5
+
+['A4', 'DISCHARGE', 'INVESTIGATION', 'OPD', 'OT', 'PROCEDURE', 'SERVICE', 'THERMAL']

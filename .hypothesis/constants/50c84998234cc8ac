@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/billing.py
+# hypothesis_version: 6.151.5
+
+['/{visit_id}/charges', '/{visit_id}/services', '/{visit_id}/total', 'charges', 'charges_by_type', 'end_time', 'ipd_id', 'name', 'quantity', 'rate', 'start_time', 'total_charges', 'visit_id']

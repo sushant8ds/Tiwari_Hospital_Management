@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/core/security.py
+# hypothesis_version: 6.151.5
+
+['Bearer', 'WWW-Authenticate', 'auto', 'exp', 'pbkdf2_sha256']

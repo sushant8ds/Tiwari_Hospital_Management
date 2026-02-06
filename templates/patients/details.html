@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Details - {{ hospital_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Patient Details</h1>
+        <div class="header-actions">
+            <button onclick="window.history.back()" class="btn btn-secondary">Back</button>
+            <button onclick="printDetails()" class="btn btn-primary">Print</button>
+        </div>
+    </div>
+
+    <div id="patientDetails" class="loading">
+        <div class="spinner">Loading patient details...</div>
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+.card-header {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 16px;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.patient-id-badge {
+    display: inline-block;
+    background: #3498db;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.loading {
+    text-align: center;
+    padding: 50px;
+    color: #7f8c8d;
+}
+
+.spinner {
+    font-size: 18px;
+}
+
+.alert {
+    padding: 12px 15px;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.history-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.history-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.history-table tr:hover {
+    background: #f8f9fa;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-completed {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-admitted {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-discharged {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #7f8c8d;
+}
+</style>
+
+<script>
+// Get patient ID from URL
+const patientId = window.location.pathname.split('/').pop();
+
+// Load patient details on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadPatientDetails();
+});
+
+async function loadPatientDetails() {
+    try {
+        // Fetch patient details
+        const response = await fetch(`/api/v1/patients/${patientId}`);
+        
+        if (!response.ok) {
+            throw new Error('Patient not found');
+        }
+        
+        const patient = await response.json();
+        
+        // Fetch patient history
+        const historyResponse = await fetch(`/api/v1/patients/${patientId}/history`);
+        const history = historyResponse.ok ? await historyResponse.json() : null;
+        
+        displayPatientDetails(patient, history);
+    } catch (error) {
+        document.getElementById('patientDetails').innerHTML = `
+            <div class="alert alert-error">
+                Error loading patient details: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function displayPatientDetails(patient, history) {
+    let html = `
+        <div class="card">
+            <div class="card-header">
+                Patient Information
+                <span class="patient-id-badge">${patient.patient_id}</span>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Full Name</div>
+                    <div class="info-value">${patient.name}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Age</div>
+                    <div class="info-value">${patient.age} years</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Gender</div>
+                    <div class="info-value">${patient.gender}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Mobile Number</div>
+                    <div class="info-value">${patient.mobile_number}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Address</div>
+                    <div class="info-value">${patient.address}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Registration Date</div>
+                    <div class="info-value">${formatDate(patient.created_date)}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Display visit history
+    if (history && history.visits && history.visits.length > 0) {
+        html += `
+            <div class="card">
+                <div class="card-header">Visit History</div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Visit ID</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Department</th>
+                            <th>Fee</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        history.visits.forEach(visit => {
+            html += `
+                <tr>
+                    <td>${visit.visit_id}</td>
+                    <td>${formatDate(visit.visit_date)}</td>
+                    <td>${visit.visit_type}</td>
+                    <td>${visit.department}</td>
+                    <td>₹${visit.opd_fee}</td>
+                    <td><span class="status-badge status-${visit.status.toLowerCase()}">${visit.status}</span></td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    // Display IPD history
+    if (history && history.ipd_admissions && history.ipd_admissions.length > 0) {
+        html += `
+            <div class="card">
+                <div class="card-header">IPD Admission History</div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>IPD ID</th>
+                            <th>Admission Date</th>
+                            <th>Discharge Date</th>
+                            <th>File Charge</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        history.ipd_admissions.forEach(ipd => {
+            html += `
+                <tr>
+                    <td>${ipd.ipd_id}</td>
+                    <td>${formatDate(ipd.admission_date)}</td>
+                    <td>${ipd.discharge_date ? formatDate(ipd.discharge_date) : 'Not discharged'}</td>
+                    <td>₹${ipd.file_charge}</td>
+                    <td><span class="status-badge status-${ipd.status.toLowerCase()}">${ipd.status}</span></td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    // Show empty state if no history
+    if ((!history || !history.visits || history.visits.length === 0) && 
+        (!history || !history.ipd_admissions || history.ipd_admissions.length === 0)) {
+        html += `
+            <div class="card">
+                <div class="empty-state">
+                    <p>No visit or admission history found for this patient.</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('patientDetails').innerHTML = html;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+function printDetails() {
+    window.print();
+}
+</script>
+
+<style media="print">
+.header-actions, .btn {
+    display: none;
+}
+
+.container {
+    max-width: 100%;
+}
+</style>
+{% endblock %}

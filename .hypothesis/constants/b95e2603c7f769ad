@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/api/v1/endpoints/visits.py
+# hypothesis_version: 6.151.5
+
+['/followup', '/opd', '/{visit_id}', '/{visit_id}/slip']

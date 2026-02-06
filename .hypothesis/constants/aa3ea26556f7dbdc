@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/crud/__init__.py
+# hypothesis_version: 6.151.5
+
+['doctor_crud', 'patient_crud', 'user_crud', 'visit_crud']

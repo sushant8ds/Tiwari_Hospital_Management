@@ -1,0 +1,4 @@
+# file: /Users/sushant/Documents/Tiwari Hospital Managemrnt /app/services/id_generator.py
+# hypothesis_version: 6.151.5
+
+['%Y%m%d', '%Y%m%d%H%M%S']
