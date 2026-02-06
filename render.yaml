@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: tiwari-hospital-management
+    env: docker
+    region: oregon
+    plan: starter
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./hospital.db
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: ENVIRONMENT
+        value: production
+      - key: HOSPITAL_NAME
+        value: Tiwari Hospital
+      - key: HOSPITAL_ADDRESS
+        value: Your Hospital Address
+      - key: HOSPITAL_PHONE
+        value: +91-XXXXXXXXXX
+      - key: HOSPITAL_LOGO_PATH
+        value: static/images/hospital_logo.png
+      - key: DEFAULT_PRINTER_TYPE
+        value: thermal
+      - key: THERMAL_PRINTER_WIDTH
+        value: 58
+      - key: A4_PRINTER_NAME
+        value: default
