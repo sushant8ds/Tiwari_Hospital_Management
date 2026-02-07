@@ -297,19 +297,19 @@ class PaymentCrud:
     async def get_daily_collection(
         self,
         db: AsyncSession,
-        date: Optional[datetime] = None
+        target_date: Optional[date] = None
     ) -> Decimal:
         """Get total collection for a specific date (defaults to today)"""
-        if date is None:
-            date = datetime.now().date()
-        else:
-            date = date.date() if isinstance(date, datetime) else date
+        if target_date is None:
+            target_date = date.today()
+        elif isinstance(target_date, datetime):
+            target_date = target_date.date()
         
         # Query payments for the specified date
         result = await db.execute(
             select(func.sum(Payment.amount))
             .where(
-                func.date(Payment.payment_date) == date,
+                func.date(Payment.payment_date) == target_date,
                 Payment.payment_status == PaymentStatus.COMPLETED
             )
         )

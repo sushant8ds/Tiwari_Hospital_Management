@@ -40,7 +40,7 @@ async def get_dashboard_stats(
         bed_stats = await bed_crud.get_bed_occupancy_stats(db)
         
         # Get today's collection
-        today_collection = await payment_crud.get_daily_collection(db, datetime.now())
+        today_collection = await payment_crud.get_daily_collection(db, date.today())
         
         return {
             "today_opd_count": today_opd_count,

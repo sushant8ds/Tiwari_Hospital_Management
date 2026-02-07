@@ -53,11 +53,11 @@ async def seed_initial_data():
             if not existing_doctors:
                 print("📊 No doctors found. Seeding initial doctors...")
                 doctors_data = [
+                    {"name": "Dr. Nitish Tiwari", "department": "Orthopedics", "new_fee": 500, "followup_fee": 300},
+                    {"name": "Dr. Muskan Tiwari", "department": "Dentist", "new_fee": 400, "followup_fee": 250},
                     {"name": "Dr. Rajesh Kumar", "department": "General Medicine", "new_fee": 300, "followup_fee": 200},
                     {"name": "Dr. Priya Sharma", "department": "Pediatrics", "new_fee": 350, "followup_fee": 250},
                     {"name": "Dr. Amit Singh", "department": "Surgery", "new_fee": 500, "followup_fee": 300},
-                    {"name": "Dr. Sunita Verma", "department": "Gynecology", "new_fee": 400, "followup_fee": 250},
-                    {"name": "Dr. Vikram Patel", "department": "Orthopedics", "new_fee": 450, "followup_fee": 300},
                 ]
                 
                 for idx, doc_data in enumerate(doctors_data, start=1):
