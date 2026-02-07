@@ -6,9 +6,13 @@ services:
     plan: starter
     branch: main
     healthCheckPath: /health
+    disk:
+      name: hospital-data
+      mountPath: /data
+      sizeGB: 1
     envVars:
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./hospital.db
+        value: sqlite+aiosqlite:////data/hospital.db
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM

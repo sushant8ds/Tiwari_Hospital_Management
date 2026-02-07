@@ -25,10 +25,94 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
+    # Auto-seed database with initial data if empty
+    await seed_initial_data()
+    
     yield
     
     # Shutdown
     print("Shutting down Hospital Management System...")
+
+
+async def seed_initial_data():
+    """Automatically seed database with initial doctors and beds if empty"""
+    from decimal import Decimal
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+    from sqlalchemy import select
+    from app.models.doctor import Doctor, DoctorStatus
+    from app.models.bed import Bed, WardType, BedStatus
+    
+    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    
+    try:
+        # Check if doctors exist
+        async with async_session() as session:
+            result = await session.execute(select(Doctor))
+            existing_doctors = result.scalars().all()
+            
+            if not existing_doctors:
+                print("📊 No doctors found. Seeding initial doctors...")
+                doctors_data = [
+                    {"name": "Dr. Rajesh Kumar", "department": "General Medicine", "new_fee": 300, "followup_fee": 200},
+                    {"name": "Dr. Priya Sharma", "department": "Pediatrics", "new_fee": 350, "followup_fee": 250},
+                    {"name": "Dr. Amit Singh", "department": "Surgery", "new_fee": 500, "followup_fee": 300},
+                    {"name": "Dr. Sunita Verma", "department": "Gynecology", "new_fee": 400, "followup_fee": 250},
+                    {"name": "Dr. Vikram Patel", "department": "Orthopedics", "new_fee": 450, "followup_fee": 300},
+                ]
+                
+                for idx, doc_data in enumerate(doctors_data, start=1):
+                    doctor = Doctor(
+                        doctor_id=f"DOC{idx:05d}",
+                        name=doc_data["name"],
+                        department=doc_data["department"],
+                        new_patient_fee=Decimal(str(doc_data["new_fee"])),
+                        followup_fee=Decimal(str(doc_data["followup_fee"])),
+                        status=DoctorStatus.ACTIVE
+                    )
+                    session.add(doctor)
+                
+                await session.commit()
+                print(f"✅ Added {len(doctors_data)} doctors successfully")
+            else:
+                print(f"ℹ️  Database already has {len(existing_doctors)} doctors")
+        
+        # Check if beds exist
+        async with async_session() as session:
+            result = await session.execute(select(Bed))
+            existing_beds = result.scalars().all()
+            
+            if not existing_beds:
+                print("🛏️  No beds found. Seeding initial beds...")
+                beds_data = [
+                    {"ward": WardType.GENERAL, "count": 10, "charge": 500},
+                    {"ward": WardType.SEMI_PRIVATE, "count": 5, "charge": 1000},
+                    {"ward": WardType.PRIVATE, "count": 5, "charge": 2000},
+                ]
+                
+                bed_counter = 1
+                for ward_info in beds_data:
+                    for i in range(1, ward_info["count"] + 1):
+                        bed = Bed(
+                            bed_id=f"BED{bed_counter:05d}",
+                            bed_number=f"{ward_info['ward'].value[:3]}-{i:02d}",
+                            ward_type=ward_info["ward"],
+                            per_day_charge=Decimal(str(ward_info["charge"])),
+                            status=BedStatus.AVAILABLE
+                        )
+                        session.add(bed)
+                        bed_counter += 1
+                
+                await session.commit()
+                total_beds = sum(w["count"] for w in beds_data)
+                print(f"✅ Added {total_beds} beds successfully")
+            else:
+                print(f"ℹ️  Database already has {len(existing_beds)} beds")
+        
+        print("✅ Database initialization complete!")
+        
+    except Exception as e:
+        print(f"⚠️  Error seeding initial data: {str(e)}")
+        print("   You may need to run: python init_render_db.py manually")
 
 
 # Create FastAPI application

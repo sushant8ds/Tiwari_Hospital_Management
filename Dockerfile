@@ -26,7 +26,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create directories for generated files
-RUN mkdir -p generated_slips backups uploads static/images
+RUN mkdir -p generated_slips backups uploads static/images /data
+
+# Make sure /data directory is writable
+RUN chmod 777 /data
 
 # Expose port
 EXPOSE 8000
