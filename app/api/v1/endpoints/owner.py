@@ -32,7 +32,7 @@ router = APIRouter()
 async def create_doctor(
     doctor: DoctorCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Create a new doctor (Admin only)"""
     try:
@@ -53,7 +53,7 @@ async def update_doctor(
     doctor_id: str,
     doctor: DoctorUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Update doctor details (Admin only)"""
     try:
@@ -78,7 +78,7 @@ async def update_doctor(
 async def create_employee(
     employee: EmployeeCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Create a new employee (Admin only)"""
     try:
@@ -101,7 +101,7 @@ async def create_employee(
 async def get_all_employees(
     status: Optional[EmployeeStatus] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Get all employees (Admin only)"""
     employees = await employee_crud.get_all_employees(db, status=status)
@@ -112,7 +112,7 @@ async def get_all_employees(
 async def get_employee(
     employee_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Get employee by ID (Admin only)"""
     employee = await employee_crud.get_employee_by_id(db, employee_id)
@@ -126,7 +126,7 @@ async def update_employee(
     employee_id: str,
     employee: EmployeeUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Update employee details (Admin only)"""
     try:
@@ -153,7 +153,7 @@ async def update_employee(
 async def create_salary_payment(
     payment: SalaryPaymentCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Create a salary payment record (Admin only)"""
     try:
@@ -178,7 +178,7 @@ async def get_salary_payments(
     year: Optional[int] = None,
     status: Optional[PaymentStatus] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Get all salary payments with filters (Admin only)"""
     payments = await salary_payment_crud.get_all_payments(
@@ -195,7 +195,7 @@ async def get_pending_payments(
     month: Optional[int] = None,
     year: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Get all pending salary payments (Admin only)"""
     payments = await salary_payment_crud.get_pending_payments(
@@ -211,7 +211,7 @@ async def mark_payment_as_paid(
     payment_id: str,
     payment_data: SalaryPaymentMarkPaid,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Mark a salary payment as paid (Admin only)"""
     payment = await salary_payment_crud.mark_as_paid(
@@ -230,7 +230,7 @@ async def update_salary_payment(
     payment_id: str,
     payment: SalaryPaymentUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin())
 ):
     """Update salary payment details (Admin only)"""
     updated_payment = await salary_payment_crud.update_payment(
