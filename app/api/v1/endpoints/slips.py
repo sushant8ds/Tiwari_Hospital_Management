@@ -172,7 +172,12 @@ async def print_opd_slip(
             
             <div class="doctor-info">
                 <div class="doctor-name">{doctor.name}</div>
-                <div class="doctor-details">{doctor.department}</div>
+                <div class="doctor-details">M.B.B.S., General Physician</div>
+                <div class="doctor-details">पूर्व चिकित्सक- एम्स (AIIMS) गोरखपुर</div>
+                <div class="doctor-details">(रुद्री, जाड, मोतिहारी एवं नरकटियागंज)</div>
+                <div class="doctor-details">Phone No: {settings.HOSPITAL_PHONE}</div>
+                <div class="doctor-details">Email: drnitish{doctor.name.split()[-1].lower()}35@gmail.com</div>
+                <div class="doctor-details" style="color: #8B0000; font-weight: bold;">(सोमवार से शनिवार, दोपहर 02 बजे से शाम 06 बजे तक )</div>
             </div>
             
             <div class="patient-box">
