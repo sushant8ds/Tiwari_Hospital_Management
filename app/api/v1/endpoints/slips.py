@@ -54,6 +54,159 @@ async def generate_opd_slip(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+@router.get("/print/opd/{visit_id}")
+async def print_opd_slip(
+    visit_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate printable OPD slip HTML (no authentication required for printing)"""
+    from fastapi.responses import HTMLResponse
+    from app.crud.visit import visit_crud
+    from app.core.config import settings
+    from datetime import datetime
+    
+    try:
+        # Get visit details
+        visit = await visit_crud.get_visit_by_id(db, visit_id)
+        if not visit:
+            raise HTTPException(status_code=404, detail="Visit not found")
+        
+        # Get patient details
+        patient = visit.patient
+        doctor = visit.doctor
+        
+        # Format date
+        visit_date = visit.created_date.strftime("%d/%m/%Y")
+        
+        # Generate HTML slip
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>OPD Slip - {patient.name}</title>
+            <style>
+                @page {{
+                    size: A5;
+                    margin: 10mm;
+                }}
+                body {{
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    font-size: 12pt;
+                }}
+                .header {{
+                    text-align: center;
+                    border-bottom: 3px solid #8B0000;
+                    padding-bottom: 10px;
+                    margin-bottom: 20px;
+                }}
+                .hospital-name {{
+                    font-size: 24pt;
+                    font-weight: bold;
+                    color: #8B0000;
+                    margin: 0;
+                }}
+                .hospital-info {{
+                    font-size: 10pt;
+                    color: #666;
+                    margin: 5px 0;
+                }}
+                .doctor-info {{
+                    margin: 15px 0;
+                }}
+                .doctor-name {{
+                    font-size: 18pt;
+                    font-weight: bold;
+                    color: #8B0000;
+                }}
+                .doctor-details {{
+                    font-size: 10pt;
+                    color: #666;
+                }}
+                .patient-box {{
+                    border: 2px solid #000;
+                    padding: 15px;
+                    margin: 20px 0;
+                }}
+                .patient-row {{
+                    margin: 8px 0;
+                    display: flex;
+                    justify-content: space-between;
+                }}
+                .label {{
+                    font-weight: bold;
+                }}
+                .footer {{
+                    margin-top: 30px;
+                    padding-top: 10px;
+                    border-top: 2px solid #8B0000;
+                    text-align: center;
+                    font-size: 9pt;
+                    color: #666;
+                }}
+                @media print {{
+                    body {{
+                        padding: 0;
+                    }}
+                    .no-print {{
+                        display: none;
+                    }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1 class="hospital-name">{settings.HOSPITAL_NAME.upper()}</h1>
+                <p class="hospital-info">{settings.HOSPITAL_ADDRESS}</p>
+                <p class="hospital-info">Phone: {settings.HOSPITAL_PHONE}</p>
+            </div>
+            
+            <div class="doctor-info">
+                <div class="doctor-name">{doctor.name}</div>
+                <div class="doctor-details">{doctor.department}</div>
+            </div>
+            
+            <div class="patient-box">
+                <div class="patient-row">
+                    <span><span class="label">Patient Name:</span> {patient.name}</span>
+                    <span><span class="label">Age/Sex:</span> {patient.age}/{patient.gender}</span>
+                </div>
+                <div class="patient-row">
+                    <span><span class="label">Address:</span> {patient.address or 'N/A'}</span>
+                </div>
+                <div class="patient-row">
+                    <span><span class="label">Mobile No:</span> {patient.mobile_number}</span>
+                    <span><span class="label">Date:</span> {visit_date}</span>
+                </div>
+                <div class="patient-row">
+                    <span><span class="label">Patient ID:</span> {patient.patient_id}</span>
+                    <span><span class="label">Visit ID:</span> {visit.visit_id}</span>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>{settings.HOSPITAL_ADDRESS}</p>
+                <p>(Not For Medico Legal Purpose)</p>
+            </div>
+            
+            <script>
+                // Auto-print when page loads
+                window.onload = function() {{
+                    window.print();
+                }};
+            </script>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating slip: {str(e)}")
+
+
 @router.post("/generate/investigation", response_model=SlipContentResponse)
 async def generate_investigation_slip(
     visit_id: str = None,
