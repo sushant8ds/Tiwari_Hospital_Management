@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Salary Management - {{ hospital_name }}{% endblock %}
+
+{% block module_name %}Salary Management{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-money-bill-wave me-2"></i>Salary Management</h2>
+            <p class="text-muted">Track and process employee salary payments</p>
+        </div>
+        <div>
+            <select class="form-select d-inline-block w-auto me-2" id="filterMonth" onchange="loadPayments()">
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+            <select class="form-select d-inline-block w-auto me-2" id="filterYear" onchange="loadPayments()">
+                <option value="">All Years</option>
+            </select>
+            <select class="form-select d-inline-block w-auto" id="filterStatus" onchange="loadPayments()">
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="PAID">Paid</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Salary Payments Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Employee Name</th>
+                            <th>Post</th>
+                            <th>Month/Year</th>
+                            <th>Amount</th>
+                            <th>Payment Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mark as Paid Modal -->
+<div class="modal fade" id="markPaidModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mark Payment as Paid</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="markPaidForm">
+                    <input type="hidden" name="payment_id">
+                    <div class="mb-3">
+                        <label class="form-label">Payment Date *</label>
+                        <input type="date" class="form-control" name="payment_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="markAsPaid()">Mark as Paid</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let markPaidModal;
+const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+document.addEventListener('DOMContentLoaded', function() {
+    markPaidModal = new bootstrap.Modal(document.getElementById('markPaidModal'));
+    
+    // Populate year filter
+    const currentYear = new Date().getFullYear();
+    const yearSelect = document.getElementById('filterYear');
+    for (let year = currentYear; year >= currentYear - 5; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+    
+    // Set current month and year
+    document.getElementById('filterMonth').value = new Date().getMonth() + 1;
+    document.getElementById('filterYear').value = currentYear;
+    
+    loadPayments();
+});
+
+async function loadPayments() {
+    const month = document.getElementById('filterMonth').value;
+    const year = document.getElementById('filterYear').value;
+    const status = document.getElementById('filterStatus').value;
+    
+    const params = new URLSearchParams();
+    if (month) params.append('month', month);
+    if (year) params.append('year', year);
+    if (status) params.append('status', status);
+    
+    try {
+        const response = await fetch(`/api/v1/owner/salary-payments?${params}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load payments');
+        
+        const payments = await response.json();
+        const tbody = document.getElementById('paymentsTableBody');
+        
+        if (payments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No payments found</td></tr>';
+            return;
+        }
+        
+        // Fetch employee details for each payment
+        const employeeCache = {};
+        for (const payment of payments) {
+            if (!employeeCache[payment.employee_id]) {
+                const empRes = await fetch(`/api/v1/owner/employees/${payment.employee_id}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (empRes.ok) {
+                    employeeCache[payment.employee_id] = await empRes.json();
+                }
+            }
+        }
+        
+        tbody.innerHTML = payments.map(payment => {
+            const employee = employeeCache[payment.employee_id] || {};
+            return `
+                <tr>
+                    <td>${payment.payment_id}</td>
+                    <td>${employee.name || 'N/A'}</td>
+                    <td>${employee.post || 'N/A'}</td>
+                    <td>${monthNames[payment.month]} ${payment.year}</td>
+                    <td>₹${parseFloat(payment.amount).toLocaleString('en-IN')}</td>
+                    <td>${payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('en-IN') : '-'}</td>
+                    <td><span class="badge bg-${payment.status === 'PAID' ? 'success' : 'warning'}">${payment.status}</span></td>
+                    <td>
+                        ${payment.status === 'PENDING' ? `
+                            <button class="btn btn-sm btn-success" onclick='showMarkPaidModal("${payment.payment_id}")'>
+                                <i class="fas fa-check"></i> Mark Paid
+                            </button>
+                        ` : '-'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading payments:', error);
+        showToast('Failed to load payments', 'error');
+    }
+}
+
+function showMarkPaidModal(paymentId) {
+    const form = document.getElementById('markPaidForm');
+    form.reset();
+    form.payment_id.value = paymentId;
+    form.payment_date.value = new Date().toISOString().split('T')[0];
+    markPaidModal.show();
+}
+
+async function markAsPaid() {
+    const form = document.getElementById('markPaidForm');
+    const formData = new FormData(form);
+    const paymentId = formData.get('payment_id');
+    
+    const data = {
+        payment_date: formData.get('payment_date'),
+        notes: formData.get('notes') || null
+    };
+    
+    try {
+        const response = await fetch(`/api/v1/owner/salary-payments/${paymentId}/mark-paid`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to mark payment as paid');
+        }
+        
+        showToast('Payment marked as paid successfully', 'success');
+        markPaidModal.hide();
+        loadPayments();
+    } catch (error) {
+        console.error('Error marking payment as paid:', error);
+        showToast(error.message, 'error');
+    }
+}
+</script>
+{% endblock %}

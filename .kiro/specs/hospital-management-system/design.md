@@ -40,7 +40,7 @@ graph TB
         Reports[Reporting Service]
         Employee[Employee Management]
     end
-    
+
     subgraph "Data Layer"
         DB[(Database)]
         Backup[(Backup Storage)]

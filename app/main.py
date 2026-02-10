@@ -269,6 +269,62 @@ async def reports_daily_page(request: Request):
     )
 
 
+@app.get("/owner")
+async def owner_dashboard_page(request: Request):
+    """Owner dashboard page (Admin only)"""
+    return templates.TemplateResponse(
+        "owner/dashboard.html",
+        {
+            "request": request,
+            "hospital_name": settings.HOSPITAL_NAME,
+            "hospital_address": settings.HOSPITAL_ADDRESS,
+            "hospital_phone": settings.HOSPITAL_PHONE
+        }
+    )
+
+
+@app.get("/owner/employees")
+async def owner_employees_page(request: Request):
+    """Owner employees management page (Admin only)"""
+    return templates.TemplateResponse(
+        "owner/employees.html",
+        {
+            "request": request,
+            "hospital_name": settings.HOSPITAL_NAME,
+            "hospital_address": settings.HOSPITAL_ADDRESS,
+            "hospital_phone": settings.HOSPITAL_PHONE
+        }
+    )
+
+
+@app.get("/owner/salaries")
+async def owner_salaries_page(request: Request):
+    """Owner salary management page (Admin only)"""
+    return templates.TemplateResponse(
+        "owner/salaries.html",
+        {
+            "request": request,
+            "hospital_name": settings.HOSPITAL_NAME,
+            "hospital_address": settings.HOSPITAL_ADDRESS,
+            "hospital_phone": settings.HOSPITAL_PHONE
+        }
+    )
+
+
+@app.get("/owner/doctors")
+async def owner_doctors_page(request: Request):
+    """Owner doctors management page (Admin only)"""
+    return templates.TemplateResponse(
+        "owner/doctors.html",
+        {
+            "request": request,
+            "hospital_name": settings.HOSPITAL_NAME,
+            "hospital_address": settings.HOSPITAL_ADDRESS,
+            "hospital_phone": settings.HOSPITAL_PHONE
+        }
+    )
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""

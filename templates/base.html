@@ -71,6 +71,7 @@
                     <li><a href="/ipd/admit" class="{% if '/ipd' in request.path %}active{% endif %}">IPD</a></li>
                     <li><a href="/billing/investigations" class="{% if '/billing' in request.path %}active{% endif %}">Billing</a></li>
                     <li><a href="/reports/daily" class="{% if '/reports' in request.path %}active{% endif %}">Reports</a></li>
+                    <li id="ownerMenuItem" style="display: none;"><a href="/owner" class="{% if '/owner' in request.path %}active{% endif %}"><i class="fas fa-user-shield me-2"></i>Owner</a></li>
                 </ul>
             </nav>
 
@@ -89,6 +90,23 @@
     
     <!-- Base JavaScript -->
     <script>
+        // Check user role and show/hide Owner menu
+        async function checkUserRole() {
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    // Decode JWT to get user role (simple decode, not verification)
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    if (payload.role === 'ADMIN') {
+                        document.getElementById('ownerMenuItem').style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking user role:', error);
+            }
+        }
+        checkUserRole();
+        
         // Update current time
         function updateTime() {
             const now = new Date();

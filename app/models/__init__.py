@@ -15,6 +15,7 @@ from app.models.audit import AuditLog
 from app.models.ot import OTProcedure
 from app.models.payment import Payment
 from app.models.slip import Slip
+from app.models.salary_payment import SalaryPayment
 
 __all__ = [
     "Base",
@@ -29,5 +30,6 @@ __all__ = [
     "AuditLog",
     "OTProcedure",
     "Payment",
-    "Slip"
+    "Slip",
+    "SalaryPayment"
 ]
