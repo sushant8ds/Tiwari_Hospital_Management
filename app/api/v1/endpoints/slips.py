@@ -66,8 +66,8 @@ async def print_opd_slip(
     from datetime import datetime
     
     try:
-        # Get visit details
-        visit = await visit_crud.get_visit_by_id(db, visit_id)
+        # Get visit details with patient and doctor loaded
+        visit = await visit_crud.get_visit_with_details(db, visit_id)
         if not visit:
             raise HTTPException(status_code=404, detail="Visit not found")
         
