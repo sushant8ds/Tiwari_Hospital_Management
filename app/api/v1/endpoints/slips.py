@@ -158,9 +158,16 @@ async def print_opd_slip(
         </head>
         <body>
             <div class="header">
-                <h1 class="hospital-name">{settings.HOSPITAL_NAME.upper()}</h1>
-                <p class="hospital-info">{settings.HOSPITAL_ADDRESS}</p>
-                <p class="hospital-info">Phone: {settings.HOSPITAL_PHONE}</p>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <h1 class="hospital-name">{settings.HOSPITAL_NAME.upper()}</h1>
+                        <p class="hospital-info">{settings.HOSPITAL_ADDRESS}</p>
+                        <p class="hospital-info">Phone: {settings.HOSPITAL_PHONE}</p>
+                    </div>
+                    <div style="width: 100px; text-align: right;">
+                        <img src="/static/images/hospital_logo.png" alt="Hospital Logo" style="max-width: 100px; max-height: 80px;" onerror="this.style.display='none'">
+                    </div>
+                </div>
             </div>
             
             <div class="doctor-info">

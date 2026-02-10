@@ -20,9 +20,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # Hospital Information
-    HOSPITAL_NAME: str = "Surya City Hospital"
-    HOSPITAL_ADDRESS: str = "123 Medical Street, Healthcare City, State - 123456"
-    HOSPITAL_PHONE: str = "+91-1234567890"
+    HOSPITAL_NAME: str = "Surya Hospital"
+    HOSPITAL_ADDRESS: str = "Tamkuhi Raj, Kushinagar, Uttar Pradesh - 274407"
+    HOSPITAL_PHONE: str = "+91-9580845238"
     HOSPITAL_LOGO_PATH: str = "static/images/hospital_logo.png"
     
     # Application

@@ -22,11 +22,11 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: HOSPITAL_NAME
-        value: Tiwari Hospital
+        value: Surya Hospital
       - key: HOSPITAL_ADDRESS
         value: Tamkuhi Raj, Kushinagar, Uttar Pradesh - 274407
       - key: HOSPITAL_PHONE
-        value: +91-XXXXXXXXXX
+        value: +91-9580845238
       - key: HOSPITAL_LOGO_PATH
         value: static/images/hospital_logo.png
       - key: DEFAULT_PRINTER_TYPE
