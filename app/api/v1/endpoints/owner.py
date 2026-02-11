@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from datetime import date
 
-from app.core.dependencies import get_db, get_current_user, require_admin
+from app.core.dependencies import get_db
 from app.crud.doctor import doctor_crud
 from app.crud.employee import employee_crud
 from app.crud.salary_payment import salary_payment_crud
@@ -20,7 +20,6 @@ from app.schemas.salary_payment import (
     SalaryPaymentResponse,
     SalaryPaymentWithEmployee
 )
-from app.models.user import User
 from app.models.employee import EmployeeStatus
 from app.models.salary_payment import PaymentStatus
 
@@ -31,10 +30,9 @@ router = APIRouter()
 @router.post("/doctors", response_model=DoctorResponse)
 async def create_doctor(
     doctor: DoctorCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Create a new doctor (Admin only)"""
+    """Create a new doctor"""
     try:
         new_doctor = await doctor_crud.create_doctor(
             db=db,
@@ -52,10 +50,9 @@ async def create_doctor(
 async def update_doctor(
     doctor_id: str,
     doctor: DoctorUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Update doctor details (Admin only)"""
+    """Update doctor details"""
     try:
         updated_doctor = await doctor_crud.update_doctor(
             db=db,
@@ -77,10 +74,9 @@ async def update_doctor(
 @router.post("/employees", response_model=EmployeeResponse)
 async def create_employee(
     employee: EmployeeCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Create a new employee (Admin only)"""
+    """Create a new employee"""
     try:
         new_employee = await employee_crud.create_employee(
             db=db,
@@ -100,10 +96,9 @@ async def create_employee(
 @router.get("/employees", response_model=List[EmployeeResponse])
 async def get_all_employees(
     status: Optional[EmployeeStatus] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Get all employees (Admin only)"""
+    """Get all employees"""
     employees = await employee_crud.get_all_employees(db, status=status)
     return employees
 
@@ -111,10 +106,9 @@ async def get_all_employees(
 @router.get("/employees/{employee_id}", response_model=EmployeeResponse)
 async def get_employee(
     employee_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Get employee by ID (Admin only)"""
+    """Get employee by ID"""
     employee = await employee_crud.get_employee_by_id(db, employee_id)
     if not employee:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
@@ -125,10 +119,9 @@ async def get_employee(
 async def update_employee(
     employee_id: str,
     employee: EmployeeUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Update employee details (Admin only)"""
+    """Update employee details"""
     try:
         updated_employee = await employee_crud.update_employee(
             db=db,
@@ -152,10 +145,9 @@ async def update_employee(
 @router.post("/salary-payments", response_model=SalaryPaymentResponse)
 async def create_salary_payment(
     payment: SalaryPaymentCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Create a salary payment record (Admin only)"""
+    """Create a salary payment record"""
     try:
         new_payment = await salary_payment_crud.create_payment(
             db=db,
@@ -177,10 +169,9 @@ async def get_salary_payments(
     month: Optional[int] = None,
     year: Optional[int] = None,
     status: Optional[PaymentStatus] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Get all salary payments with filters (Admin only)"""
+    """Get all salary payments with filters"""
     payments = await salary_payment_crud.get_all_payments(
         db=db,
         month=month,
@@ -194,10 +185,9 @@ async def get_salary_payments(
 async def get_pending_payments(
     month: Optional[int] = None,
     year: Optional[int] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Get all pending salary payments (Admin only)"""
+    """Get all pending salary payments"""
     payments = await salary_payment_crud.get_pending_payments(
         db=db,
         month=month,
@@ -210,10 +200,9 @@ async def get_pending_payments(
 async def mark_payment_as_paid(
     payment_id: str,
     payment_data: SalaryPaymentMarkPaid,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Mark a salary payment as paid (Admin only)"""
+    """Mark a salary payment as paid"""
     payment = await salary_payment_crud.mark_as_paid(
         db=db,
         payment_id=payment_id,
@@ -229,10 +218,9 @@ async def mark_payment_as_paid(
 async def update_salary_payment(
     payment_id: str,
     payment: SalaryPaymentUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin())
+    db: AsyncSession = Depends(get_db)
 ):
-    """Update salary payment details (Admin only)"""
+    """Update salary payment details"""
     updated_payment = await salary_payment_crud.update_payment(
         db=db,
         payment_id=payment_id,
