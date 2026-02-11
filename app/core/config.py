@@ -7,11 +7,24 @@ from typing import Optional
 import os
 
 
+def get_database_url() -> str:
+    """
+    Get database URL and convert it to the correct format for asyncpg
+    """
+    db_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/hospital_db")
+    
+    # Render provides postgres:// but we need postgresql+asyncpg://
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    
+    return db_url
+
+
 class Settings(BaseSettings):
     """Application settings"""
     
     # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./hospital.db"
+    DATABASE_URL: str = get_database_url()
     DATABASE_URL_TEST: str = "sqlite+aiosqlite:///./test.db"
     
     # Security
@@ -26,7 +39,7 @@ class Settings(BaseSettings):
     HOSPITAL_LOGO_PATH: str = "static/images/hospital_logo.png"
     
     # Application
-    ENVIRONMENT: str = "development"
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
     # Printing
     DEFAULT_PRINTER_TYPE: str = "thermal"

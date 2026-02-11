@@ -6,13 +6,11 @@ services:
     plan: starter
     branch: main
     healthCheckPath: /health
-    disk:
-      name: hospital-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:////data/hospital.db
+        fromDatabase:
+          name: hospital-postgres-db
+          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
@@ -35,3 +33,9 @@ services:
         value: 58
       - key: A4_PRINTER_NAME
         value: default
+
+databases:
+  - name: hospital-postgres-db
+    databaseName: hospital_db
+    user: hospital_user
+    plan: starter
