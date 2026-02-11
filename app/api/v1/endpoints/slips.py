@@ -96,58 +96,50 @@ async def print_opd_slip(
                     padding: 15px;
                     font-size: 11pt;
                 }}
-                .slip-container {{
+                .header-section {{
                     display: flex;
-                    min-height: 90vh;
-                }}
-                .left-section {{
-                    width: 30%;
-                    border-right: 2px solid #8B0000;
-                    padding-right: 15px;
-                }}
-                .right-section {{
-                    width: 70%;
-                    padding-left: 15px;
-                    position: relative;
-                }}
-                .doctor-info {{
+                    align-items: flex-start;
+                    border-bottom: 3px solid #8B0000;
+                    padding-bottom: 15px;
                     margin-bottom: 20px;
                 }}
+                .doctor-info {{
+                    flex: 0 0 35%;
+                    padding-right: 15px;
+                }}
                 .doctor-name {{
-                    font-size: 16pt;
-                    font-weight: bold;
-                    color: #8B0000;
-                    margin-bottom: 8px;
-                }}
-                .doctor-details {{
-                    font-size: 9pt;
-                    color: #333;
-                    line-height: 1.4;
-                    margin: 3px 0;
-                }}
-                .hospital-section {{
-                    margin-top: 25px;
-                    padding-top: 15px;
-                    border-top: 2px solid #8B0000;
-                }}
-                .hospital-name {{
-                    font-size: 18pt;
+                    font-size: 14pt;
                     font-weight: bold;
                     color: #8B0000;
                     margin-bottom: 5px;
                 }}
-                .hospital-info {{
-                    font-size: 9pt;
-                    color: #666;
+                .doctor-details {{
+                    font-size: 8pt;
+                    color: #333;
                     line-height: 1.3;
+                    margin: 2px 0;
+                }}
+                .hospital-info {{
+                    flex: 0 0 65%;
+                    text-align: center;
                 }}
                 .logo-container {{
-                    text-align: center;
-                    margin: 15px 0;
+                    margin-bottom: 8px;
                 }}
                 .logo-container img {{
-                    max-width: 80px;
-                    max-height: 60px;
+                    max-width: 70px;
+                    max-height: 50px;
+                }}
+                .hospital-name {{
+                    font-size: 22pt;
+                    font-weight: bold;
+                    color: #8B0000;
+                    margin: 5px 0;
+                }}
+                .hospital-address {{
+                    font-size: 9pt;
+                    color: #666;
+                    line-height: 1.2;
                 }}
                 .patient-box {{
                     border: 2px solid #000;
@@ -165,7 +157,7 @@ async def print_opd_slip(
                 }}
                 .prescription-area {{
                     margin-top: 20px;
-                    min-height: 500px;
+                    min-height: 550px;
                     border: 1px dashed #ccc;
                     padding: 15px;
                     background: white;
@@ -179,10 +171,7 @@ async def print_opd_slip(
                     border-bottom: 1px solid #ddd;
                 }}
                 .footer {{
-                    position: absolute;
-                    bottom: 10px;
-                    left: 15px;
-                    right: 15px;
+                    margin-top: 20px;
                     text-align: center;
                     font-size: 8pt;
                     color: #666;
@@ -203,60 +192,58 @@ async def print_opd_slip(
             </style>
         </head>
         <body>
-            <div class="slip-container">
-                <!-- Left Section: Doctor & Hospital Info -->
-                <div class="left-section">
-                    <div class="doctor-info">
-                        <div class="doctor-name">{doctor.name}</div>
-                        <div class="doctor-details">M.B.B.S., General Physician</div>
-                        <div class="doctor-details">पूर्व चिकित्सक- एम्स (AIIMS) गोरखपुर</div>
-                        <div class="doctor-details">(रुद्री, जाड, मोतिहारी एवं नरकटियागंज)</div>
-                        <div class="doctor-details" style="margin-top: 8px;">Phone: {settings.HOSPITAL_PHONE}</div>
-                        <div class="doctor-details">Email: drnitish{doctor.name.split()[-1].lower()}35@gmail.com</div>
-                        <div class="doctor-details" style="color: #8B0000; font-weight: bold; margin-top: 8px;">
-                            (सोमवार से शनिवार, दोपहर 02 बजे से शाम 06 बजे तक)
-                        </div>
-                    </div>
-                    
-                    <div class="hospital-section">
-                        <div class="logo-container">
-                            <img src="/static/images/hospital_logo.png" alt="Hospital Logo" onerror="this.style.display='none'">
-                        </div>
-                        <div class="hospital-name">{settings.HOSPITAL_NAME.upper()}</div>
-                        <div class="hospital-info">{settings.HOSPITAL_ADDRESS}</div>
-                        <div class="hospital-info">Phone: {settings.HOSPITAL_PHONE}</div>
+            <!-- Header Section: Doctor Info (Left) + Hospital Name (Center) -->
+            <div class="header-section">
+                <div class="doctor-info">
+                    <div class="doctor-name">{doctor.name}</div>
+                    <div class="doctor-details">M.B.B.S., General Physician</div>
+                    <div class="doctor-details">पूर्व चिकित्सक- एम्स (AIIMS) गोरखपुर</div>
+                    <div class="doctor-details">(रुद्री, जाड, मोतिहारी एवं नरकटियागंज)</div>
+                    <div class="doctor-details" style="margin-top: 5px;">Phone: {settings.HOSPITAL_PHONE}</div>
+                    <div class="doctor-details">Email: drnitish{doctor.name.split()[-1].lower()}35@gmail.com</div>
+                    <div class="doctor-details" style="color: #8B0000; font-weight: bold; margin-top: 5px; font-size: 7pt;">
+                        (सोमवार से शनिवार, दोपहर 02 बजे से शाम 06 बजे तक)
                     </div>
                 </div>
                 
-                <!-- Right Section: Patient Info & Prescription Area -->
-                <div class="right-section">
-                    <div class="patient-box">
-                        <div class="patient-row">
-                            <span class="label">Patient Name:</span> {patient.name}
-                            <span style="float: right;"><span class="label">Age/Sex:</span> {patient.age}/{patient.gender}</span>
-                        </div>
-                        <div class="patient-row">
-                            <span class="label">Address:</span> {patient.address or 'N/A'}
-                        </div>
-                        <div class="patient-row">
-                            <span class="label">Mobile:</span> {patient.mobile_number}
-                            <span style="float: right;"><span class="label">Date:</span> {visit_date}</span>
-                        </div>
-                        <div class="patient-row">
-                            <span class="label">Patient ID:</span> {patient.patient_id}
-                            <span style="float: right;"><span class="label">Visit ID:</span> {visit.visit_id}</span>
-                        </div>
+                <div class="hospital-info">
+                    <div class="logo-container">
+                        <img src="/static/images/hospital_logo.png" alt="Hospital Logo" onerror="this.style.display='none'">
                     </div>
-                    
-                    <div class="prescription-area">
-                        <div class="prescription-header">Rx (Prescription)</div>
-                        <!-- Blank space for doctor to write -->
-                    </div>
-                    
-                    <div class="footer">
-                        <p>{settings.HOSPITAL_ADDRESS} | (Not For Medico Legal Purpose)</p>
-                    </div>
+                    <div class="hospital-name">{settings.HOSPITAL_NAME.upper()}</div>
+                    <div class="hospital-address">{settings.HOSPITAL_ADDRESS}</div>
+                    <div class="hospital-address">Phone: {settings.HOSPITAL_PHONE}</div>
                 </div>
+            </div>
+            
+            <!-- Patient Details -->
+            <div class="patient-box">
+                <div class="patient-row">
+                    <span class="label">Patient Name:</span> {patient.name}
+                    <span style="float: right;"><span class="label">Age/Sex:</span> {patient.age}/{patient.gender}</span>
+                </div>
+                <div class="patient-row">
+                    <span class="label">Address:</span> {patient.address or 'N/A'}
+                </div>
+                <div class="patient-row">
+                    <span class="label">Mobile:</span> {patient.mobile_number}
+                    <span style="float: right;"><span class="label">Date:</span> {visit_date}</span>
+                </div>
+                <div class="patient-row">
+                    <span class="label">Patient ID:</span> {patient.patient_id}
+                    <span style="float: right;"><span class="label">Visit ID:</span> {visit.visit_id}</span>
+                </div>
+            </div>
+            
+            <!-- Prescription Area -->
+            <div class="prescription-area">
+                <div class="prescription-header">Rx (Prescription)</div>
+                <!-- Blank space for doctor to write -->
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+                <p>{settings.HOSPITAL_ADDRESS} | (Not For Medico Legal Purpose)</p>
             </div>
             
             <script>
