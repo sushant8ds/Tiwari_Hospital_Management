@@ -20,7 +20,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: HOSPITAL_NAME
-        value: Surya Hospital
+        value: Dr. Subash Memorial Hospital
       - key: HOSPITAL_ADDRESS
         value: Tamkuhi Raj, Kushinagar, Uttar Pradesh - 274407
       - key: HOSPITAL_PHONE
