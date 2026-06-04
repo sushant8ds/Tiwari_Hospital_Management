@@ -94,7 +94,7 @@
 // Load doctors
 async function loadDoctors() {
     try {
-        const response = await fetch('/api/v1/doctors/');
+        const response = await apiFetch('/api/v1/doctors/');
         const doctors = await response.json();
         const select = document.getElementById('doctor');
         doctors.forEach(doctor => {
@@ -117,7 +117,7 @@ document.getElementById('searchBtn').addEventListener('click', async function() 
     }
 
     try {
-        const response = await fetch(`/api/v1/patients/search?query=${searchTerm}`);
+        const response = await apiFetch(`/api/v1/patients/search?query=${searchTerm}`);
         if (response.ok) {
             const patients = await response.json();
             if (patients.length > 0) {
@@ -150,9 +150,8 @@ document.getElementById('followupForm').addEventListener('submit', async functio
     };
 
     try {
-        const response = await fetch('/api/v1/visits/opd/followup', {
+        const response = await apiFetch('/api/v1/visits/opd/followup', {
             method: 'POST',
-            headers: getHeaders(),
             body: JSON.stringify(formData)
         });
 

@@ -16,7 +16,7 @@ services:
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: 30
+        value: 480
       - key: ENVIRONMENT
         value: production
       - key: HOSPITAL_NAME
