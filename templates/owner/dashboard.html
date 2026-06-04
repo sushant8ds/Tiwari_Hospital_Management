@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Owner Panel - {{ hospital_name }}{% endblock %}
+
+{% block module_name %}Owner Panel{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <h2><i class="fas fa-user-shield me-2"></i>Owner Dashboard</h2>
+        <p class="text-muted">Manage doctors, employees, and salaries</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalDoctors">0</h3>
+                    <p>Total Doctors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalEmployees">0</h3>
+                    <p>Total Employees</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="pendingPayments">0</h3>
+                    <p>Pending Payments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-info">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="monthlyPayroll">₹0</h3>
+                    <p>Monthly Payroll</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Sections -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="management-card">
+                <div class="card-icon bg-primary">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h4>Doctor Management</h4>
+                <p>Add, edit, and manage doctors</p>
+                <a href="/owner/doctors" class="btn btn-primary btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Doctors
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="management-card">
+                <div class="card-icon bg-success">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h4>Employee Management</h4>
+                <p>Add, edit, and manage employees</p>
+                <a href="/owner/employees" class="btn btn-success btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Employees
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="management-card">
+                <div class="card-icon bg-warning">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h4>Salary Management</h4>
+                <p>Track and process salary payments</p>
+                <a href="/owner/salaries" class="btn btn-warning btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Salaries
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: white;
+    font-size: 24px;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+}
+
+.stat-content p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.management-card {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+    height: 100%;
+}
+
+.management-card .card-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    color: white;
+    font-size: 30px;
+}
+
+.management-card h4 {
+    margin: 15px 0 10px;
+    color: #333;
+}
+
+.management-card p {
+    color: #666;
+    margin-bottom: 20px;
+}
+</style>
+
+<script>
+// Load dashboard stats
+async function loadStats() {
+    try {
+        // Load doctors count
+        const doctorsRes = await fetch('/api/v1/doctors', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (doctorsRes.ok) {
+            const doctors = await doctorsRes.json();
+            document.getElementById('totalDoctors').textContent = doctors.length;
+        }
+
+        // Load employees count
+        const employeesRes = await fetch('/api/v1/owner/employees', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (employeesRes.ok) {
+            const employees = await employeesRes.json();
+            document.getElementById('totalEmployees').textContent = employees.length;
+            
+            // Calculate monthly payroll
+            const totalPayroll = employees.reduce((sum, emp) => sum + parseFloat(emp.monthly_salary), 0);
+            document.getElementById('monthlyPayroll').textContent = `₹${totalPayroll.toLocaleString('en-IN')}`;
+        }
+
+        // Load pending payments
+        const paymentsRes = await fetch('/api/v1/owner/salary-payments/pending', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (paymentsRes.ok) {
+            const payments = await paymentsRes.json();
+            document.getElementById('pendingPayments').textContent = payments.length;
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', loadStats);
+</script>
+{% endblock %}

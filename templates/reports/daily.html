@@ -1,0 +1,655 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Reports - {{ hospital_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-bar me-2"></i>Daily Reports</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <!-- Report Type Selection -->
+                <div class="form-group mb-3">
+                    <label for="reportType">Select Report Type:</label>
+                    <select id="reportType" class="form-control">
+                        <option value="daily-opd">Daily OPD Report</option>
+                        <option value="doctor-revenue">Doctor Revenue Report</option>
+                        <option value="ipd-occupancy">IPD Occupancy Report</option>
+                        <option value="salary">Salary Report</option>
+                        <option value="collection-summary">Collection Summary Report</option>
+                    </select>
+                </div>
+                
+                <!-- Daily OPD Report Form -->
+                <div id="dailyOpdForm" class="report-form">
+                    <h4>Daily OPD Report</h4>
+                    <div class="form-group mb-3">
+                        <label for="opdReportDate">Report Date:</label>
+                        <input type="date" id="opdReportDate" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="opdDoctorId">Doctor (Optional):</label>
+                        <select id="opdDoctorId" class="form-control">
+                            <option value="">All Doctors</option>
+                        </select>
+                    </div>
+                    <button onclick="generateDailyOpdReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+                
+                <!-- Doctor Revenue Report Form -->
+                <div id="doctorRevenueForm" class="report-form" style="display: none;">
+                    <h4>Doctor Revenue Report</h4>
+                    <div class="form-group mb-3">
+                        <label for="revenueStartDate">Start Date:</label>
+                        <input type="date" id="revenueStartDate" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="revenueEndDate">End Date:</label>
+                        <input type="date" id="revenueEndDate" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="revenueDoctorId">Doctor (Optional):</label>
+                        <select id="revenueDoctorId" class="form-control">
+                            <option value="">All Doctors</option>
+                        </select>
+                    </div>
+                    <button onclick="generateDoctorRevenueReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+                
+                <!-- IPD Occupancy Report Form -->
+                <div id="ipdOccupancyForm" class="report-form" style="display: none;">
+                    <h4>IPD Occupancy Report</h4>
+                    <p>Current bed occupancy status</p>
+                    <button onclick="generateIpdOccupancyReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+                
+                <!-- Salary Report Form -->
+                <div id="salaryForm" class="report-form" style="display: none;">
+                    <h4>Salary Report</h4>
+                    <div class="form-group mb-3">
+                        <label for="salaryMonth">Month:</label>
+                        <select id="salaryMonth" class="form-control" required>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="salaryYear">Year:</label>
+                        <input type="number" id="salaryYear" class="form-control" min="2000" max="2100" required>
+                    </div>
+                    <button onclick="generateSalaryReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+
+                <!-- Collection Summary Report Form -->
+                <div id="collectionSummaryForm" class="report-form" style="display: none;">
+                    <h4>Collection Summary Report</h4>
+                    <div class="form-group mb-3">
+                        <label for="collectionRange">Report Range:</label>
+                        <select id="collectionRange" class="form-control">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="custom">Custom Date Range</option>
+                        </select>
+                    </div>
+                    <div id="customRangeFields" class="row mb-3" style="display: none;">
+                        <div class="col-md-6">
+                            <label for="collectionStartDate">Start Date:</label>
+                            <input type="date" id="collectionStartDate" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="collectionEndDate">End Date:</label>
+                            <input type="date" id="collectionEndDate" class="form-control">
+                        </div>
+                    </div>
+                    <button onclick="generateCollectionSummaryReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+                
+                <!-- Report Results -->
+                <div id="reportResults" style="margin-top: 30px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auth helper headers
+function getHeaders() {
+    return {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+    };
+}
+
+// Set default dates
+document.getElementById('opdReportDate').valueAsDate = new Date();
+document.getElementById('revenueStartDate').valueAsDate = new Date();
+document.getElementById('revenueEndDate').valueAsDate = new Date();
+document.getElementById('salaryMonth').value = new Date().getMonth() + 1;
+document.getElementById('salaryYear').value = new Date().getFullYear();
+
+const startDateInput = document.getElementById('collectionStartDate');
+const endDateInput = document.getElementById('collectionEndDate');
+if (startDateInput && endDateInput) {
+    startDateInput.valueAsDate = new Date();
+    endDateInput.valueAsDate = new Date();
+}
+
+// Load doctors for dropdowns
+async function loadDoctors() {
+    try {
+        const response = await fetch('/api/v1/doctors/', {
+            headers: getHeaders()
+        });
+        const doctors = await response.json();
+        
+        const opdSelect = document.getElementById('opdDoctorId');
+        const revenueSelect = document.getElementById('revenueDoctorId');
+        
+        doctors.forEach(doctor => {
+            const option1 = document.createElement('option');
+            option1.value = doctor.doctor_id;
+            option1.textContent = `${doctor.name} (${doctor.department})`;
+            opdSelect.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = doctor.doctor_id;
+            option2.textContent = `${doctor.name} (${doctor.department})`;
+            revenueSelect.appendChild(option2);
+        });
+    } catch (error) {
+        console.error('Error loading doctors:', error);
+    }
+}
+
+// Switch report forms
+document.getElementById('reportType').addEventListener('change', function() {
+    document.querySelectorAll('.report-form').forEach(form => form.style.display = 'none');
+    
+    const reportType = this.value;
+    if (reportType === 'daily-opd') {
+        document.getElementById('dailyOpdForm').style.display = 'block';
+    } else if (reportType === 'doctor-revenue') {
+        document.getElementById('doctorRevenueForm').style.display = 'block';
+    } else if (reportType === 'ipd-occupancy') {
+        document.getElementById('ipdOccupancyForm').style.display = 'block';
+    } else if (reportType === 'salary') {
+        document.getElementById('salaryForm').style.display = 'block';
+    } else if (reportType === 'collection-summary') {
+        document.getElementById('collectionSummaryForm').style.display = 'block';
+    }
+});
+
+// Switch collection range fields
+const collRange = document.getElementById('collectionRange');
+if (collRange) {
+    collRange.addEventListener('change', function() {
+        const customFields = document.getElementById('customRangeFields');
+        if (this.value === 'custom') {
+            customFields.style.display = 'flex';
+        } else {
+            customFields.style.display = 'none';
+        }
+    });
+}
+
+// Generate Daily OPD Report
+async function generateDailyOpdReport() {
+    const reportDate = document.getElementById('opdReportDate').value;
+    const doctorId = document.getElementById('opdDoctorId').value;
+    
+    if (!reportDate) {
+        alert('Please select a report date');
+        return;
+    }
+    
+    try {
+        const response = await apiFetch('/api/v1/reports/daily-opd', {
+            method: 'POST',
+            body: JSON.stringify({
+                report_date: reportDate,
+                doctor_id: doctorId || null
+            })
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Failed to fetch Daily OPD report');
+        }
+        
+        const report = await response.json();
+        displayDailyOpdReport(report);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Generate Doctor Revenue Report
+async function generateDoctorRevenueReport() {
+    const startDate = document.getElementById('revenueStartDate').value;
+    const endDate = document.getElementById('revenueEndDate').value;
+    const doctorId = document.getElementById('revenueDoctorId').value;
+    
+    if (!startDate || !endDate) {
+        alert('Please select start and end dates');
+        return;
+    }
+    
+    try {
+        const response = await apiFetch('/api/v1/reports/doctor-revenue', {
+            method: 'POST',
+            body: JSON.stringify({
+                start_date: startDate,
+                end_date: endDate,
+                doctor_id: doctorId || null
+            })
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Failed to fetch doctor revenue report');
+        }
+        
+        const report = await response.json();
+        displayDoctorRevenueReport(report);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Generate IPD Occupancy Report
+async function generateIpdOccupancyReport() {
+    try {
+        const response = await apiFetch('/api/v1/reports/ipd-occupancy');
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Failed to fetch occupancy report');
+        }
+        
+        const report = await response.json();
+        displayIpdOccupancyReport(report);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Generate Salary Report
+async function generateSalaryReport() {
+    const month = document.getElementById('salaryMonth').value;
+    const year = document.getElementById('salaryYear').value;
+    
+    if (!month || !year) {
+        alert('Please select month and year');
+        return;
+    }
+    
+    try {
+        const response = await apiFetch('/api/v1/reports/salary', {
+            method: 'POST',
+            body: JSON.stringify({
+                month: parseInt(month),
+                year: parseInt(year)
+            })
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Failed to fetch salary report');
+        }
+        
+        const report = await response.json();
+        displaySalaryReport(report);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Generate Collection Summary Report
+async function generateCollectionSummaryReport() {
+    const range = document.getElementById('collectionRange').value;
+    let startDateVal, endDateVal;
+    
+    const formatDate = (d) => {
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        const year = d.getFullYear();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        return [year, month, day].join('-');
+    };
+
+    if (range === 'today') {
+        const today = new Date();
+        startDateVal = formatDate(today);
+        endDateVal = formatDate(today);
+    } else if (range === 'week') {
+        const today = new Date();
+        const start = new Date();
+        start.setDate(today.getDate() - 6);
+        startDateVal = formatDate(start);
+        endDateVal = formatDate(today);
+    } else if (range === 'month') {
+        const today = new Date();
+        const start = new Date();
+        start.setDate(today.getDate() - 29);
+        startDateVal = formatDate(start);
+        endDateVal = formatDate(today);
+    } else if (range === 'custom') {
+        const s = document.getElementById('collectionStartDate').value;
+        const e = document.getElementById('collectionEndDate').value;
+        if (!s || !e) {
+            alert('Please select both start and end dates.');
+            return;
+        }
+        startDateVal = s;
+        endDateVal = e;
+    }
+    
+    try {
+        const response = await apiFetch('/api/v1/reports/collection-summary', {
+            method: 'POST',
+            body: JSON.stringify({
+                start_date: startDateVal,
+                end_date: endDateVal
+            })
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Failed to fetch collection summary');
+        }
+        
+        const report = await response.json();
+        displayCollectionSummaryReport(report, startDateVal, endDateVal);
+    } catch (error) {
+        alert('Error generating report: ' + error.message);
+    }
+}
+
+// Display functions
+function displayCollectionSummaryReport(report, start, end) {
+    const typeLabels = {
+        'OPD_FEE': 'OPD Consultation Fee',
+        'IPD_ADVANCE': 'IPD Advance Payment',
+        'INVESTIGATION': 'Investigation / Lab Charges',
+        'PROCEDURE': 'Procedure / Treatment',
+        'SERVICE': 'Hospital Services / Ward / Bed',
+        'OT': 'Operation Theatre Fee',
+        'DISCHARGE': 'IPD Discharge Final Settlement',
+        'MANUAL': 'Manual Collection'
+    };
+
+    const typesHtml = Object.entries(report.summary.by_type)
+        .filter(([type, amount]) => amount > 0)
+        .map(([type, amount]) => `
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span class="text-muted"><i class="fas fa-check-circle text-primary me-2"></i>${typeLabels[type] || type}</span>
+                <span class="fw-bold">₹${amount.toFixed(2)}</span>
+            </div>
+        `).join('') || '<div class="text-center text-muted py-3">No collections by category.</div>';
+
+    const modesHtml = Object.entries(report.summary.by_mode)
+        .map(([mode, amount]) => {
+            let icon = 'money-bill-wave text-success';
+            if (mode === 'UPI') icon = 'mobile-alt text-primary';
+            if (mode === 'CARD') icon = 'credit-card text-warning';
+            return `
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <span class="text-muted"><i class="fas fa-${icon} me-2"></i>${mode}</span>
+                    <span class="fw-bold">₹${amount.toFixed(2)}</span>
+                </div>
+            `;
+        }).join('');
+
+    const dailyTrendsHtml = report.daily_trends.length > 0 ? `
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-header bg-light border-0 py-3">
+                <h5 class="mb-0 text-dark"><i class="fas fa-chart-line text-success me-2"></i>Daily Collection Trends</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Cash Collection</th>
+                                <th>UPI Collection</th>
+                                <th>Card Collection</th>
+                                <th class="text-end">Total Collection</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${report.daily_trends.map(t => `
+                                <tr>
+                                    <td><strong class="text-dark">${new Date(t.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></td>
+                                    <td>₹${(t.by_mode['CASH'] || 0).toFixed(2)}</td>
+                                    <td>₹${(t.by_mode['UPI'] || 0).toFixed(2)}</td>
+                                    <td>₹${(t.by_mode['CARD'] || 0).toFixed(2)}</td>
+                                    <td class="text-end fw-bold text-success">₹${t.total.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    ` : '';
+
+    const html = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Collection Summary Report</h4>
+            <span class="badge bg-secondary py-2 px-3">${new Date(start).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })} to ${new Date(end).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        </div>
+        
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card bg-success text-white h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%) !important;">
+                    <div class="card-body d-flex flex-column justify-content-between py-4">
+                        <div>
+                            <span class="text-white-50 uppercase small fw-bold">Total Collection</span>
+                            <h2 class="mb-0 mt-2 font-monospace fw-bold">₹${report.summary.total_collection.toFixed(2)}</h2>
+                        </div>
+                        <div class="mt-3">
+                            <i class="fas fa-wallet fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bold text-dark border-bottom pb-2"><i class="fas fa-coins text-warning me-2"></i>Collection by Mode</h6>
+                        ${modesHtml}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bold text-dark border-bottom pb-2"><i class="fas fa-tags text-primary me-2"></i>Collection by Category</h6>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            ${typesHtml}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        ${dailyTrendsHtml}
+    `;
+    
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+function displayDailyOpdReport(report) {
+    const html = `
+        <h4>Daily OPD Report - ${report.report_date}</h4>
+        <div class="alert alert-info">
+            <h5>Summary</h5>
+            <p><strong>Total Patients:</strong> ${report.summary.total_patients}</p>
+            <p><strong>New Patients:</strong> ${report.summary.new_patients}</p>
+            <p><strong>Follow-up Patients:</strong> ${report.summary.followup_patients}</p>
+            <p><strong>Total Collection:</strong> ₹${report.summary.total_collection.toFixed(2)}</p>
+        </div>
+        <h5>Doctor-wise Breakdown</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Department</th>
+                    <th>Total Patients</th>
+                    <th>New</th>
+                    <th>Follow-up</th>
+                    <th>Collection</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${report.doctor_wise.map(doc => `
+                    <tr>
+                        <td>${doc.doctor_name}</td>
+                        <td>${doc.department}</td>
+                        <td>${doc.total_patients}</td>
+                        <td>${doc.new_patients}</td>
+                        <td>${doc.followup_patients}</td>
+                        <td>₹${doc.collection.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+function displayDoctorRevenueReport(report) {
+    const html = `
+        <h4>Doctor Revenue Report</h4>
+        <p>${report.start_date} to ${report.end_date}</p>
+        <div class="alert alert-success">
+            <h5>Total Revenue: ₹${report.total_revenue.toFixed(2)}</h5>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Department</th>
+                    <th>Total Patients</th>
+                    <th>New</th>
+                    <th>Follow-up</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${report.doctor_wise_revenue.map(doc => `
+                    <tr>
+                        <td>${doc.doctor_name}</td>
+                        <td>${doc.department}</td>
+                        <td>${doc.total_patients}</td>
+                        <td>${doc.new_patients}</td>
+                        <td>${doc.followup_patients}</td>
+                        <td>₹${doc.opd_revenue.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+function displayIpdOccupancyReport(report) {
+    const html = `
+        <h4>IPD Occupancy Report</h4>
+        <div class="alert alert-info">
+            <h5>Summary</h5>
+            <p><strong>Total Beds:</strong> ${report.summary.total_beds}</p>
+            <p><strong>Occupied:</strong> ${report.summary.occupied}</p>
+            <p><strong>Available:</strong> ${report.summary.available}</p>
+            <p><strong>Maintenance:</strong> ${report.summary.maintenance}</p>
+            <p><strong>Occupancy Rate:</strong> ${report.summary.occupancy_rate}%</p>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Bed Number</th>
+                    <th>Ward Type</th>
+                    <th>Status</th>
+                    <th>Patient</th>
+                    <th>Days Admitted</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${report.beds.map(bed => `
+                    <tr>
+                        <td>${bed.bed_number}</td>
+                        <td>${bed.ward_type}</td>
+                        <td><span class="badge bg-${bed.status === 'OCCUPIED' ? 'danger' : bed.status === 'AVAILABLE' ? 'success' : 'warning'}">${bed.status}</span></td>
+                        <td>${bed.patient ? `${bed.patient.name} (${bed.patient.patient_id})` : '-'}</td>
+                        <td>${bed.patient ? bed.patient.days_admitted : '-'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+function displaySalaryReport(report) {
+    const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+    const html = `
+        <h4>Salary Report - ${months[report.month]} ${report.year}</h4>
+        <div class="alert alert-success">
+            <h5>Summary</h5>
+            <p><strong>Total Employees:</strong> ${report.total_employees}</p>
+            <p><strong>Total Salary:</strong> ₹${report.total_salary.toFixed(2)}</p>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Post</th>
+                    <th>Status</th>
+                    <th>Duty Hours</th>
+                    <th>Monthly Salary</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${report.employees.map(emp => `
+                    <tr>
+                        <td>${emp.employee_id}</td>
+                        <td>${emp.name}</td>
+                        <td>${emp.post}</td>
+                        <td>${emp.employment_status}</td>
+                        <td>${emp.duty_hours}</td>
+                        <td>₹${emp.monthly_salary.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('reportResults').innerHTML = html;
+}
+
+// Load doctors on page load
+loadDoctors();
+</script>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Management - {{ hospital_name }}{% endblock %}
+
+{% block module_name %}Doctor Management{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-user-md me-2"></i>Doctor Management</h2>
+            <p class="text-muted">Manage doctor details and fees</p>
+        </div>
+        <button class="btn btn-primary" onclick="showAddDoctorModal()">
+            <i class="fas fa-plus me-1"></i>Add Doctor
+        </button>
+    </div>
+
+    <!-- Doctors Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Doctor ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>New Patient Fee</th>
+                            <th>Follow-up Fee</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorsTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Doctor Modal -->
+<div class="modal fade" id="addDoctorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Doctor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addDoctorForm">
+                    <div class="mb-3">
+                        <label class="form-label">Doctor Name *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department *</label>
+                        <input type="text" class="form-control" name="department" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Patient Fee (₹) *</label>
+                        <input type="number" class="form-control" name="new_patient_fee" required min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Follow-up Fee (₹) *</label>
+                        <input type="number" class="form-control" name="followup_fee" required min="0" step="0.01">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addDoctor()">Add Doctor</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Doctor Modal -->
+<div class="modal fade" id="editDoctorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Doctor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editDoctorForm">
+                    <input type="hidden" name="doctor_id">
+                    <div class="mb-3">
+                        <label class="form-label">Doctor Name</label>
+                        <input type="text" class="form-control" name="name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <input type="text" class="form-control" name="department">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Patient Fee (₹)</label>
+                        <input type="number" class="form-control" name="new_patient_fee" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Follow-up Fee (₹)</label>
+                        <input type="number" class="form-control" name="followup_fee" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="ACTIVE">Active</option>
+                            <option value="INACTIVE">Inactive</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateDoctor()">Update Doctor</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let addDoctorModal, editDoctorModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    addDoctorModal = new bootstrap.Modal(document.getElementById('addDoctorModal'));
+    editDoctorModal = new bootstrap.Modal(document.getElementById('editDoctorModal'));
+    loadDoctors();
+});
+
+function showAddDoctorModal() {
+    document.getElementById('addDoctorForm').reset();
+    addDoctorModal.show();
+}
+
+async function loadDoctors() {
+    try {
+        const response = await fetch('/api/v1/doctors', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load doctors');
+        
+        const doctors = await response.json();
+        const tbody = document.getElementById('doctorsTableBody');
+        
+        if (doctors.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No doctors found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = doctors.map(doc => `
+            <tr>
+                <td>${doc.doctor_id}</td>
+                <td>${doc.name}</td>
+                <td>${doc.department}</td>
+                <td>₹${parseFloat(doc.new_patient_fee).toLocaleString('en-IN')}</td>
+                <td>₹${parseFloat(doc.followup_fee).toLocaleString('en-IN')}</td>
+                <td><span class="badge bg-${doc.status === 'ACTIVE' ? 'success' : 'secondary'}">${doc.status}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick='editDoctor(${JSON.stringify(doc)})'>
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading doctors:', error);
+        showToast('Failed to load doctors', 'error');
+    }
+}
+
+async function addDoctor() {
+    const form = document.getElementById('addDoctorForm');
+    const formData = new FormData(form);
+    
+    const data = {
+        name: formData.get('name'),
+        department: formData.get('department'),
+        new_patient_fee: parseFloat(formData.get('new_patient_fee')),
+        followup_fee: parseFloat(formData.get('followup_fee'))
+    };
+    
+    try {
+        const response = await fetch('/api/v1/owner/doctors', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to add doctor');
+        }
+        
+        showToast('Doctor added successfully', 'success');
+        addDoctorModal.hide();
+        loadDoctors();
+    } catch (error) {
+        console.error('Error adding doctor:', error);
+        showToast(error.message, 'error');
+    }
+}
+
+function editDoctor(doctor) {
+    const form = document.getElementById('editDoctorForm');
+    form.doctor_id.value = doctor.doctor_id;
+    form.name.value = doctor.name;
+    form.department.value = doctor.department;
+    form.new_patient_fee.value = doctor.new_patient_fee;
+    form.followup_fee.value = doctor.followup_fee;
+    form.status.value = doctor.status;
+    
+    editDoctorModal.show();
+}
+
+async function updateDoctor() {
+    const form = document.getElementById('editDoctorForm');
+    const formData = new FormData(form);
+    const doctorId = formData.get('doctor_id');
+    
+    const data = {
+        name: formData.get('name'),
+        department: formData.get('department'),
+        new_patient_fee: parseFloat(formData.get('new_patient_fee')),
+        followup_fee: parseFloat(formData.get('followup_fee')),
+        status: formData.get('status')
+    };
+    
+    try {
+        const response = await fetch(`/api/v1/owner/doctors/${doctorId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to update doctor');
+        }
+        
+        showToast('Doctor updated successfully', 'success');
+        editDoctorModal.hide();
+        loadDoctors();
+    } catch (error) {
+        console.error('Error updating doctor:', error);
+        showToast(error.message, 'error');
+    }
+}
+</script>
+{% endblock %}

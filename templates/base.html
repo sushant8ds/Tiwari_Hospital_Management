@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ hospital_name }}{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', path='/css/style.css') }}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Header - Sticky -->
+    <header class="header-top" id="mainHeader">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <!-- Hospital Logo + Name (left) -->
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ url_for('static', path='/images/hospital_logo.png') }}?v=2" 
+                             alt="Dr. Subash Memorial Hospital Logo" 
+                             class="hospital-logo-img me-3"
+                             style="max-height: 50px !important; max-width: 150px !important; height: auto !important; width: auto !important; object-fit: contain !important;"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', path='/images/hospital_logo.svg') }}'; this.onerror=function(){this.style.display='none'};">
+                        <div>
+                            <div class="hospital-logo">
+                                {{ hospital_name }}
+                            </div>
+                            <small class="text-muted">{{ hospital_address }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Current Module (center) -->
+                <div class="col-md-4 text-center">
+                    <div class="current-module">
+                        {% block module_name %}Dashboard{% endblock %}
+                    </div>
+                </div>
+                
+                <!-- User Info (right) -->
+                <div class="col-md-4 text-end">
+                    <div class="user-info-box">
+                        <div class="d-flex align-items-center justify-content-end flex-wrap gap-2">
+                            <!-- Toggle switch for view mode (initially hidden) -->
+                            <div id="view-mode-toggle-container" class="form-check form-switch me-2 mb-0" style="display: none;">
+                                <input class="form-check-input" type="checkbox" id="viewModeToggle">
+                                <label class="form-check-label text-muted small" for="viewModeToggle" id="viewModeLabel" style="font-size: 8pt; font-weight: bold; cursor: pointer;">Owner View</label>
+                            </div>
+                            <div>
+                                <i class="fas fa-user-circle me-2"></i>
+                                <span id="current-user">Admin User</span>
+                                <span class="badge badge-yellow ms-2" id="user-role-badge">ADMIN</span>
+                                <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()" style="padding: 2px 6px; font-size: 8pt;" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+                            </div>
+                        </div>
+                        <div class="mt-1">
+                            <small id="current-time"></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar - Professional Boxed Design -->
+            <nav class="sidebar">
+                <ul class="sidebar-menu">
+                    <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a></li>
+                    <li><a href="/opd/new" class="{% if '/opd/new' in request.path %}active{% endif %}">OPD</a></li>
+                    <li><a href="/opd/followup" class="{% if '/opd/followup' in request.path %}active{% endif %}">Follow-up</a></li>
+                    <li><a href="/ipd" class="{% if '/ipd' in request.path %}active{% endif %}">IPD</a></li>
+                    <li><a href="/billing/investigations" class="{% if '/billing' in request.path %}active{% endif %}">Billing</a></li>
+                    <li><a href="/reports/daily" class="{% if '/reports' in request.path %}active{% endif %}">Reports</a></li>
+                    <li><a href="/owner" class="{% if '/owner' in request.path %}active{% endif %}"><i class="fas fa-user-shield me-2"></i>Owner</a></li>
+                </ul>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Container for Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Base JavaScript -->
+    <script>
+        // Check authentication on page load
+        function logout() {
+            localStorage.clear();
+            window.location.href = "/login";
+        }
+        
+        (function() {
+            const token = localStorage.getItem("token");
+            const path = window.location.pathname;
+            
+            if (!token && path !== "/login" && !path.startsWith("/print/")) {
+                window.location.href = "/login";
+                return;
+            }
+        })();
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true,
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            const timeEl = document.getElementById('current-time');
+            if (timeEl) timeEl.textContent = timeStr;
+        }
+        updateTime();
+        setInterval(updateTime, 60000); // Update every minute
+        
+        // Add shadow to header on scroll
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('mainHeader');
+            if (header) {
+                if (window.scrollY > 10) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            }
+        });
+        
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 150);
+            }, 3000);
+        }
+        
+        // Make showToast globally available
+        window.showToast = showToast;
+
+        // Global function to get headers with authentication token
+        function getHeaders() {
+            return {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
+            };
+        }
+        window.getHeaders = getHeaders;
+
+        // Global authenticated fetch wrapper - auto-redirects on token expiry
+        async function apiFetch(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...getHeaders(), ...(options.headers || {}) }
+            });
+            if (response.status === 401) {
+                // Token expired or invalid - clear session and redirect to login
+                localStorage.clear();
+                showToast('Session expired. Please log in again.', 'error');
+                setTimeout(() => { window.location.href = '/login'; }, 1500);
+                throw new Error('Session expired. Please log in again.');
+            }
+            return response;
+        }
+        window.apiFetch = apiFetch;
+
+        // View Mode & Sidebar control
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("token");
+            const path = window.location.pathname;
+            
+            if (token) {
+                const username = localStorage.getItem("username") || "User";
+                const role = localStorage.getItem("role") || "RECEPTION";
+                
+                const userEl = document.getElementById("current-user");
+                if (userEl) userEl.textContent = username;
+                
+                const badge = document.getElementById("user-role-badge");
+                const toggleContainer = document.getElementById("view-mode-toggle-container");
+                const toggleInput = document.getElementById("viewModeToggle");
+                const toggleLabel = document.getElementById("viewModeLabel");
+                const ownerLink = document.querySelector('.sidebar-menu a[href="/owner"]')?.parentElement;
+                
+                if (role === "ADMIN") {
+                    if (toggleContainer) toggleContainer.style.display = "block";
+                    
+                    let viewMode = localStorage.getItem("viewMode") || "owner";
+                    if (toggleInput) {
+                        toggleInput.checked = (viewMode === "owner");
+                        toggleInput.addEventListener("change", function() {
+                            const newMode = toggleInput.checked ? "owner" : "staff";
+                            localStorage.setItem("viewMode", newMode);
+                            updateViewMode(newMode);
+                            // Redirect to home if on owner page and switching to staff view
+                            if (newMode === "staff" && window.location.pathname.startsWith("/owner")) {
+                                window.location.href = "/";
+                            }
+                        });
+                    }
+                    updateViewMode(viewMode);
+                    
+                    function updateViewMode(mode) {
+                        if (mode === "owner") {
+                            if (toggleLabel) toggleLabel.textContent = "Owner View";
+                            if (badge) {
+                                badge.textContent = "ADMIN";
+                                badge.className = "badge badge-yellow ms-2";
+                            }
+                            if (ownerLink) ownerLink.style.display = "block";
+                        } else {
+                            if (toggleLabel) toggleLabel.textContent = "Staff View";
+                            if (badge) {
+                                badge.textContent = "STAFF (Owner)";
+                                badge.className = "badge bg-secondary ms-2";
+                            }
+                            if (ownerLink) ownerLink.style.display = "none";
+                        }
+                    }
+                    
+                    if (viewMode === "staff" && path.startsWith("/owner")) {
+                        window.location.href = "/";
+                    }
+                } else {
+                    if (toggleContainer) toggleContainer.style.display = "none";
+                    if (badge) {
+                        badge.textContent = role;
+                        badge.className = "badge bg-secondary ms-2";
+                    }
+                    if (ownerLink) ownerLink.style.display = "none";
+                    if (path.startsWith("/owner")) {
+                        window.location.href = "/";
+                    }
+                }
+            }
+        });
+    </script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', path='/js/app.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
