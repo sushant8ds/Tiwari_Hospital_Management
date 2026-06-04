@@ -23,9 +23,6 @@ async def lifespan(app: FastAPI):
     
     # Create database tables
     async with engine.begin() as conn:
-        print("TEMPORARY: Dropping all database tables to force schema reset...")
-        await conn.run_sync(Base.metadata.drop_all)
-        print("Recreating database tables with correct columns...")
         await conn.run_sync(Base.metadata.create_all)
     
     # Auto-seed database with initial data if empty
