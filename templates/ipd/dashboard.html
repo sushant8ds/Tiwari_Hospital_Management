@@ -327,8 +327,7 @@
     // Load live occupancy stats
     async function loadLiveOccupancy() {
         try {
-            const response = await fetch('/api/v1/ipd/beds/occupancy', { headers: getHeaders() });
-            if (response.status === 401) logout();
+            const response = await apiFetch('/api/v1/ipd/beds/occupancy');
             const stats = await response.json();
             
             document.getElementById('occupied-count').textContent = stats.occupied;
@@ -352,9 +351,7 @@
     async function loadActiveIPDAdmissions() {
         const tableBody = document.getElementById('activePatientsList');
         try {
-            const response = await fetch('/api/v1/ipd/active/list', { headers: getHeaders() });
-            if (response.status === 401) logout();
-            
+            const response = await apiFetch('/api/v1/ipd/active/list');
             activeIPDs = await response.json();
             
             if (activeIPDs.length === 0) {
@@ -468,9 +465,8 @@
                 notes: document.getElementById('advance-notes').value || null
             };
             
-            const response = await fetch(`/api/v1/payments/ipd/${ipdId}/advance`, {
+            const response = await apiFetch(`/api/v1/payments/ipd/${ipdId}/advance`, {
                 method: 'POST',
-                headers: getHeaders(),
                 body: JSON.stringify(payload)
             });
             
@@ -482,9 +478,6 @@
             const payment = await response.json();
             showToast('Advance payment recorded successfully!', 'success');
             
-            // Auto generate/print advance payment slip
-            // Wait, we can generate a service or manual receipt. We can reprint it later.
-            // Let's close modal & reload
             bootstrap.Modal.getInstance(document.getElementById('advancePaymentModal')).hide();
             loadLiveOccupancy();
             loadActiveIPDAdmissions();
@@ -537,9 +530,8 @@
                 notes: document.getElementById('ot-notes').value || null
             };
             
-            const response = await fetch('/api/v1/ot/procedures', {
+            const response = await apiFetch('/api/v1/ot/procedures', {
                 method: 'POST',
-                headers: getHeaders(),
                 body: JSON.stringify(payload)
             });
             
@@ -603,9 +595,8 @@
             };
             
             // 1. Post discharge request to backend (inserts bed charges, saves discharge info, records final payment)
-            const response = await fetch(`/api/v1/ipd/${ipdId}/discharge`, {
+            const response = await apiFetch(`/api/v1/ipd/${ipdId}/discharge`, {
                 method: 'POST',
-                headers: getHeaders(),
                 body: JSON.stringify(payload)
             });
             
@@ -619,20 +610,27 @@
             
             // 2. Generate the automated discharge summary slip / final bill
             try {
-                const slipResponse = await fetch(`/api/v1/slips/generate/discharge/${ipdId}`, {
-                    method: 'POST',
-                    headers: getHeaders()
+                const slipResponse = await apiFetch(`/api/v1/slips/generate/discharge/${ipdId}`, {
+                    method: 'POST'
                 });
                 
                 if (slipResponse.ok) {
                     const slip = await slipResponse.json();
                     // Open print window in a new tab
-                    window.open(`/print/${slip.slip_id}`, '_blank');
+                    const printWindow = window.open(`/print/${slip.slip_id}`, '_blank');
+                    if (!printWindow || printWindow.closed || typeof printWindow.closed === 'undefined') {
+                        // Popup was blocked, show toast with click-to-print link
+                        showToast(`Discharge summary generated! <a href="/print/${slip.slip_id}" target="_blank" class="text-white text-decoration-underline fw-bold ms-2">Click here to print bill & summary</a>`, 'info');
+                    } else {
+                        showToast('Discharge summary/bill generated. Print window opened.', 'success');
+                    }
                 } else {
-                    console.error('Failed to auto-generate discharge slip');
+                    const err = await slipResponse.json();
+                    showToast('Discharged successfully, but failed to generate summary slip: ' + (err.detail || 'Unknown error'), 'error');
                 }
             } catch (err) {
                 console.error('Error auto-generating discharge slip:', err);
+                showToast('Discharged successfully, but failed to generate summary slip: ' + err.message, 'error');
             }
             
             // Reload dashboard
@@ -668,7 +666,7 @@
         modal.show();
         
         try {
-            const response = await fetch(`/api/v1/slips/ipd/${ipdId}`, { headers: getHeaders() });
+            const response = await apiFetch(`/api/v1/slips/ipd/${ipdId}`);
             if (!response.ok) throw new Error('Failed to load slips');
             
             const slips = await response.json();
@@ -679,6 +677,7 @@
                         No slips generated for this IPD admission yet.
                     </div>
                 `;
+                showToast('No slips found for this admission.', 'info');
                 return;
             }
             
@@ -689,7 +688,12 @@
                 item.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
                 item.type = "button";
                 item.onclick = () => {
-                    window.open(`/print/${slip.slip_id}`, '_blank');
+                    const printWindow = window.open(`/print/${slip.slip_id}`, '_blank');
+                    if (!printWindow || printWindow.closed || typeof printWindow.closed === 'undefined') {
+                        showToast(`Popup blocked! <a href="/print/${slip.slip_id}" target="_blank" class="text-white text-decoration-underline fw-bold ms-2">Click here to print ${slip.slip_type} slip</a>`, 'info');
+                    } else {
+                        showToast(`${slip.slip_type} slip print window opened.`, 'success');
+                    }
                 };
                 item.innerHTML = `
                     <div>
@@ -701,6 +705,8 @@
                 listGroup.appendChild(item);
             });
             
+            showToast('Slips loaded successfully!', 'success');
+            
         } catch (error) {
             console.error('Error loading slips:', error);
             listGroup.innerHTML = `
@@ -708,6 +714,7 @@
                     Error loading slips.
                 </div>
             `;
+            showToast('Failed to load slips: ' + error.message, 'error');
         }
     }
 </script>
