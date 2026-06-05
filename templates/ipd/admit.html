@@ -227,7 +227,7 @@ async function searchPatient() {
     }
     
     try {
-        const response = await fetch(`/api/v1/patients/search?query=${encodeURIComponent(query)}`);
+        const response = await apiFetch(`/api/v1/patients/search?query=${encodeURIComponent(query)}`);
         
         if (!response.ok) {
             throw new Error('Patient not found');
@@ -367,9 +367,8 @@ document.getElementById('ipdAdmitForm').addEventListener('submit', async functio
             referred_by: document.getElementById('referredBy').value || null
         };
         
-        const response = await fetch('/api/v1/ipd/admit', {
+        const response = await apiFetch('/api/v1/ipd/admit', {
             method: 'POST',
-            headers: getHeaders(),
             body: JSON.stringify(formData)
         });
         

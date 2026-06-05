@@ -178,20 +178,93 @@ async def print_opd_slip(
                     border-top: 1px solid #ddd;
                     padding-top: 8px;
                 }}
+                .payment-bank-details {{
+                    margin-top: 20px;
+                    border: 1px solid #ccc;
+                    padding: 10px;
+                    background-color: #f9f9f9;
+                }}
+                .payment-grid {{
+                    display: grid;
+                    grid-template-columns: 1.2fr 1fr;
+                    gap: 15px;
+                }}
+                .bank-details, .upi-details {{
+                    font-size: 9pt;
+                }}
+                .no-print-banner {{
+                    background: #e9ecef;
+                    padding: 12px 20px;
+                    margin-bottom: 20px;
+                    border-radius: 6px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border: 1px solid #ced4da;
+                }}
+                .btn-print {{
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 6px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    margin-right: 10px;
+                    font-size: 9.5pt;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                }}
+                .btn-print:hover {{
+                    background: #0056b3;
+                }}
+                .btn-whatsapp {{
+                    background: #25d366;
+                    color: white;
+                    border: none;
+                    padding: 6px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    font-size: 9.5pt;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                }}
+                .btn-whatsapp:hover {{
+                    background: #1ebd56;
+                }}
                 @media print {{
                     body {{
                         padding: 0;
                     }}
                     .no-print {{
-                        display: none;
+                        display: none !important;
                     }}
                     .prescription-area {{
                         border: none;
                     }}
                 }}
             </style>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         </head>
         <body>
+            <!-- WhatsApp & Print Banner (Hidden on print) -->
+            <div class="no-print no-print-banner">
+                <span style="font-weight: bold; color: #333; font-size: 10.5pt;">
+                    <i class="fas fa-file-medical text-primary" style="margin-right: 6px;"></i>Print Preview - Tiwari Hospital
+                </span>
+                <div>
+                    <button onclick="window.print()" class="btn-print">
+                        <i class="fas fa-print" style="margin-right: 6px;"></i> Print Slip
+                    </button>
+                    <a id="whatsappShareBtn" href="#" target="_blank" class="btn-whatsapp">
+                        <i class="fab fa-whatsapp" style="margin-right: 6px; font-size: 1.1em;"></i> Share via WhatsApp
+                    </a>
+                </div>
+            </div>
+            
             <!-- Header Section: Doctor Info (Left) + Hospital Name (Center) -->
             <div class="header-section">
                 <div class="doctor-info">
@@ -220,7 +293,7 @@ async def print_opd_slip(
             <div class="patient-box">
                 <div class="patient-row">
                     <span class="label">Patient Name:</span> {patient.name}
-                    <span style="float: right;"><span class="label">Age/Sex:</span> {patient.age}/{patient.gender}</span>
+                    <span style="float: right;"><span class="label">Age/Sex:</span> {patient.age}/{patient.gender.value if hasattr(patient.gender, 'value') else patient.gender}</span>
                 </div>
                 <div class="patient-row">
                     <span class="label">Address:</span> {patient.address or 'N/A'}
@@ -241,12 +314,44 @@ async def print_opd_slip(
                 <!-- Blank space for doctor to write -->
             </div>
             
+            <!-- Payment & Bank Options -->
+            <div class="payment-bank-details">
+                <div style="font-weight: bold; color: #8B0000; border-bottom: 1px solid #ddd; margin-bottom: 8px; padding-bottom: 3px; font-size: 9.5pt;">
+                    Payment Options & Bank Details
+                </div>
+                <div class="payment-grid">
+                    <div class="bank-details">
+                        <strong>Bank Account Transfer (IMPS/NEFT):</strong><br>
+                        Bank Name: State Bank of India<br>
+                        Account Number: 12345678901<br>
+                        IFSC Code: SBIN0001234<br>
+                        Account Holder Name: TIWARI HOSPITAL
+                    </div>
+                    <div class="upi-details">
+                        <strong>UPI/QR Payment:</strong><br>
+                        UPI ID: <span>tiwarihospital@okaxis</span><br>
+                        <div style="margin-top: 5px; font-size: 8.5pt; color: #555;">
+                            * You can scan and pay using GPay, PhonePe, Paytm, or any UPI app. Please verify the name <strong>TIWARI HOSPITAL</strong> before paying.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Footer -->
             <div class="footer">
                 <p>{settings.HOSPITAL_ADDRESS} | (Not For Medico Legal Purpose)</p>
             </div>
             
             <script>
+                document.addEventListener("DOMContentLoaded", function() {{
+                    const mobile = "{patient.mobile_number}";
+                    const cleanMobile = mobile.replace(/\\D/g, "");
+                    const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
+                    const currentUrl = window.location.href;
+                    const text = encodeURIComponent("Hello, here is your OPD Slip from Tiwari Hospital: " + currentUrl);
+                    document.getElementById("whatsappShareBtn").href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
+                }});
+                
                 // Auto-print when page loads
                 window.onload = function() {{
                     window.print();
@@ -762,20 +867,79 @@ async def print_slip(
                 border-top: 1px solid #ddd;
                 padding-top: 10px;
             }}
+            .no-print-banner {{
+                background: #e9ecef;
+                padding: 12px 20px;
+                margin-bottom: 20px;
+                border-radius: 6px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: 1px solid #ced4da;
+            }}
+            .btn-print {{
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 6px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                margin-right: 10px;
+                font-size: 9.5pt;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+            }}
+            .btn-print:hover {{
+                background: #0056b3;
+            }}
+            .btn-whatsapp {{
+                background: #25d366;
+                color: white;
+                border: none;
+                padding: 6px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 9.5pt;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+            }}
+            .btn-whatsapp:hover {{
+                background: #1ebd56;
+            }}
             @media print {{
                 body {{
                     padding: 0;
                 }}
                 .no-print {{
-                    display: none;
+                    display: none !important;
                 }}
                 .prescription-area {{
                     border: none;
                 }}
             }}
         </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     </head>
     <body>
+        <!-- WhatsApp & Print Banner (Hidden on print) -->
+        <div class="no-print no-print-banner">
+            <span style="font-weight: bold; color: #333; font-size: 10.5pt;">
+                <i class="fas fa-file-medical text-primary" style="margin-right: 6px;"></i>Print Preview - Tiwari Hospital
+            </span>
+            <div>
+                <button onclick="window.print()" class="btn-print">
+                    <i class="fas fa-print" style="margin-right: 6px;"></i> Print Slip
+                </button>
+                <a id="whatsappShareBtn" href="#" target="_blank" class="btn-whatsapp">
+                    <i class="fab fa-whatsapp" style="margin-right: 6px; font-size: 1.1em;"></i> Share via WhatsApp
+                </a>
+            </div>
+        </div>
+        
         <!-- Header -->
         <div class="header-section">
             <div style="flex: 0 0 80px;">
@@ -836,6 +1000,15 @@ async def print_slip(
         </div>
         
         <script>
+            document.addEventListener("DOMContentLoaded", function() {{
+                const mobile = "{patient.get('mobile', '')}";
+                const cleanMobile = mobile.replace(/\\D/g, "");
+                const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
+                const currentUrl = window.location.href;
+                const text = encodeURIComponent("Hello, here is your medical slip from Tiwari Hospital: " + currentUrl);
+                document.getElementById("whatsappShareBtn").href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
+            }});
+            
             window.onload = function() {{
                 window.print();
             }};

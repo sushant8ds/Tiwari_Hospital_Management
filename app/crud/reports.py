@@ -6,7 +6,7 @@ from typing import Optional, List, Dict
 from datetime import date, datetime
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import select, func, and_, or_, cast, Date
 from sqlalchemy.orm import selectinload
 
 from app.models.patient import Patient
@@ -446,13 +446,18 @@ class ReportsCRUD:
         """
         Get collection summary report aggregated by payment types and payment modes
         """
+        from datetime import time
+        start_datetime = datetime.combine(start_date, time.min)
+        end_datetime = datetime.combine(end_date, time.max)
+        
         query = select(Payment).where(
             and_(
-                func.date(Payment.payment_date) >= start_date,
-                func.date(Payment.payment_date) <= end_date,
+                Payment.payment_date >= start_datetime,
+                Payment.payment_date <= end_datetime,
                 Payment.payment_status == PaymentStatus.COMPLETED
             )
         ).order_by(Payment.payment_date.asc())
+
         
         result = await db.execute(query)
         payments = result.scalars().all()

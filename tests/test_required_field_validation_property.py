@@ -590,10 +590,10 @@ class TestRequiredFieldValidationExamples:
         assert doctor.followup_fee == Decimal("0.00")
     
     @pytest.mark.asyncio
-    async def test_patient_duplicate_mobile_rejected(self, db_session: AsyncSession):
-        """Test that duplicate mobile numbers are rejected"""
+    async def test_patient_duplicate_mobile_accepted(self, db_session: AsyncSession):
+        """Test that duplicate mobile numbers are accepted"""
         # Create first patient
-        await patient_crud.create_patient(
+        p1 = await patient_crud.create_patient(
             db=db_session,
             name="John Doe",
             age=30,
@@ -602,16 +602,17 @@ class TestRequiredFieldValidationExamples:
             mobile_number="9876543210"
         )
         
-        # Attempt to create second patient with same mobile
-        with pytest.raises(ValueError, match="[Mm]obile"):
-            await patient_crud.create_patient(
-                db=db_session,
-                name="Jane Doe",
-                age=25,
-                gender=Gender.FEMALE,
-                address="456 Test Ave",
-                mobile_number="9876543210"  # Duplicate
-            )
+        # Attempt to create second patient with same mobile (should succeed)
+        p2 = await patient_crud.create_patient(
+            db=db_session,
+            name="Jane Doe",
+            age=25,
+            gender=Gender.FEMALE,
+            address="456 Test Ave",
+            mobile_number="9876543210"  # Duplicate
+        )
+        assert p1.patient_id != p2.patient_id
+        assert p1.mobile_number == p2.mobile_number
     
     @pytest.mark.asyncio
     async def test_patient_valid_mobile_formats(self, db_session: AsyncSession):

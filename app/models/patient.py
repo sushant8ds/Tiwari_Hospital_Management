@@ -27,7 +27,7 @@ class Patient(Base):
     age = Column(Integer, nullable=False)
     gender = Column(Enum(Gender), nullable=False)
     address = Column(Text, nullable=False)
-    mobile_number = Column(String(15), nullable=False, unique=True)
+    mobile_number = Column(String(15), nullable=False)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
     updated_date = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     

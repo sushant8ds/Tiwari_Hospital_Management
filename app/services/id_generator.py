@@ -15,13 +15,13 @@ class IDGenerator:
         self._lock = asyncio.Lock()
     
     async def generate_patient_id(self, db=None) -> str:
-        """Generate unique patient ID: P-YYMM-XXXX"""
+        """Generate unique patient ID: P-YYMMM-XXXX"""
         from sqlalchemy import select
         from app.models.patient import Patient
         
         async with self._lock:
             now = datetime.now()
-            yymm = now.strftime("%y%m")
+            yymm = now.strftime("%y%b").upper()
             prefix = f"P-{yymm}-"
             
             if db:

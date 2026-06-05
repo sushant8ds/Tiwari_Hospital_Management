@@ -56,11 +56,11 @@ class TestUniqueIDGenerationProperty:
             f"Duplicates found!"
         )
         
-        # Verify ID format: P-YYMM-XXXX
-        patient_id_pattern = re.compile(r'^P-\d{4}-\d{4}$')
+        # Verify ID format: P-YYMMM-XXXX (e.g. P-26JUN-0001)
+        patient_id_pattern = re.compile(r'^P-\d{2}[A-Z]{3}-\d{4}$')
         for patient_id in generated_ids:
             assert patient_id_pattern.match(patient_id), (
-                f"Patient ID '{patient_id}' does not match expected format 'P-YYMM-XXXX'"
+                f"Patient ID '{patient_id}' does not match expected format 'P-YYMMM-XXXX'"
             )
     
     @given(
@@ -301,19 +301,21 @@ class TestUniqueIDGenerationExamples:
         generator = IDGenerator()
         patient_id = await generator.generate_patient_id()
         
-        # Verify format: P-YYMM-XXXX
+        # Verify format: P-YYMMM-XXXX (e.g. P-26JUN-0001)
         assert patient_id.startswith('P-'), "Patient ID should start with 'P-'"
-        assert len(patient_id) == 11, "Patient ID should be 11 characters long (P-YYMM-XXXX)"
+        assert len(patient_id) == 12, "Patient ID should be 12 characters long (P-YYMMM-XXXX)"
         
         # Extract and verify date part
-        date_part = patient_id[2:6]
-        assert date_part.isdigit(), "Date part should be numeric"
+        date_part = patient_id[2:7]
+        # date_part is like 26JUN
+        assert date_part[:2].isdigit(), "Year part should be numeric"
+        assert date_part[2:].isalpha(), "Month part should be letters"
         
         # Verify it's a valid date
-        datetime.strptime(date_part, "%y%m")
+        datetime.strptime(date_part, "%y%b")
         
         # Extract and verify sequence part
-        sequence_part = patient_id[7:]
+        sequence_part = patient_id[8:]
         assert sequence_part.isdigit(), "Sequence part should be numeric"
         assert len(sequence_part) == 4, "Sequence part should be 4 digits"
     

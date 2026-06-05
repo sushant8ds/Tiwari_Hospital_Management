@@ -64,7 +64,7 @@ class TestPatientRegistration:
         assert response.status_code == 422  # Validation error
     
     async def test_create_patient_duplicate_mobile(self, async_client: AsyncClient):
-        """Test patient registration with duplicate mobile number"""
+        """Test patient registration with duplicate mobile number is allowed"""
         patient_data = {
             "name": "First Patient",
             "age": 30,
@@ -77,12 +77,15 @@ class TestPatientRegistration:
         response1 = await async_client.post("/api/v1/patients/", json=patient_data)
         assert response1.status_code == 201
         
-        # Try to create second patient with same mobile
+        # Try to create second patient with same mobile (should succeed)
         patient_data["name"] = "Second Patient"
         response2 = await async_client.post("/api/v1/patients/", json=patient_data)
         
-        assert response2.status_code == 400  # Bad request
-        assert "already exists" in response2.json()["detail"].lower()
+        assert response2.status_code == 201
+        data1 = response1.json()
+        data2 = response2.json()
+        assert data1["patient_id"] != data2["patient_id"]
+        assert data1["mobile_number"] == data2["mobile_number"]
     
     async def test_create_patient_missing_required_field(self, async_client: AsyncClient):
         """Test patient registration with missing required field"""

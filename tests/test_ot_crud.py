@@ -450,3 +450,94 @@ class TestOTCrud:
         
         total = sum(c.total_amount for c in charges)
         assert total == Decimal("15000.00")
+
+    @pytest.mark.asyncio
+    async def test_get_tomorrow_ot_procedures(self, db_session: AsyncSession):
+        """Test getting tomorrow's OT procedures excluding discharged patients"""
+        # Create patients
+        patient1 = await patient_crud.create_patient(
+            db=db_session,
+            name="Patient Admitted",
+            age=45,
+            gender=Gender.MALE,
+            address="Test Address",
+            mobile_number="9876543218"
+        )
+        patient2 = await patient_crud.create_patient(
+            db=db_session,
+            name="Patient Discharged",
+            age=40,
+            gender=Gender.FEMALE,
+            address="Test Address",
+            mobile_number="9876543219"
+        )
+        
+        # Create beds
+        bed1 = await bed_crud.create_bed(
+            db=db_session,
+            bed_number="OT009",
+            ward_type=WardType.GENERAL,
+            per_day_charge=Decimal("500.00")
+        )
+        bed2 = await bed_crud.create_bed(
+            db=db_session,
+            bed_number="OT010",
+            ward_type=WardType.GENERAL,
+            per_day_charge=Decimal("500.00")
+        )
+        
+        # Admit patients
+        ipd1 = await ipd_crud.admit_patient(
+            db=db_session,
+            patient_id=patient1.patient_id,
+            bed_id=bed1.bed_id,
+            file_charge=Decimal("1000.00")
+        )
+        ipd2 = await ipd_crud.admit_patient(
+            db=db_session,
+            patient_id=patient2.patient_id,
+            bed_id=bed2.bed_id,
+            file_charge=Decimal("1000.00")
+        )
+        
+        # Create tomorrow datetime
+        tomorrow_date = datetime.now() + timedelta(days=1)
+        
+        # Create OT procedures for tomorrow
+        ot1 = await ot_crud.create_ot_procedure(
+            db=db_session,
+            ipd_id=ipd1.ipd_id,
+            operation_name="Operation Tomorrow Admitted",
+            operation_date=tomorrow_date,
+            duration_minutes=60,
+            surgeon_name="Dr. A",
+            created_by="test_user"
+        )
+        ot2 = await ot_crud.create_ot_procedure(
+            db=db_session,
+            ipd_id=ipd2.ipd_id,
+            operation_name="Operation Tomorrow Discharged",
+            operation_date=tomorrow_date,
+            duration_minutes=90,
+            surgeon_name="Dr. B",
+            created_by="test_user"
+        )
+        
+        # Discharge patient 2
+        await ipd_crud.discharge_patient(
+            db=db_session,
+            ipd_id=ipd2.ipd_id,
+            discharge_date=datetime.now(),
+            diagnosis="Recovered",
+            procedure_performed="Treatment",
+            payment_mode="CASH"
+        )
+        
+        # Get tomorrow's procedures
+        procedures = await ot_crud.get_tomorrow_ot_procedures(db_session)
+        
+        # Only the admitted patient's procedure should be returned
+        assert len(procedures) == 1
+        assert procedures[0].ot_id == ot1.ot_id
+        assert procedures[0].operation_name == "Operation Tomorrow Admitted"
+

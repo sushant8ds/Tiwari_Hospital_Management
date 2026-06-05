@@ -103,7 +103,7 @@ class TestDischargeBillCompleteness:
         # Create bed
         bed = await bed_crud.create_bed(
             db=db_session,
-            bed_number=f"BED{generate_unique_mobile()[:6]}",
+            bed_number=f"BED-{uuid.uuid4().hex[:8]}",
             ward_type=WardType.GENERAL,
             per_day_charge=Decimal("500.00")
         )
@@ -274,7 +274,7 @@ class TestDischargeBillCompleteness:
         # Create bed
         bed = await bed_crud.create_bed(
             db=db_session,
-            bed_number=f"BED{generate_unique_mobile()[:6]}",
+            bed_number=f"BED-{uuid.uuid4().hex[:8]}",
             ward_type=WardType.GENERAL,
             per_day_charge=Decimal("500.00")
         )
@@ -350,7 +350,7 @@ class TestAdvancePaymentApplication:
         # Create bed
         bed = await bed_crud.create_bed(
             db=db_session,
-            bed_number=f"BED{generate_unique_mobile()[:6]}",
+            bed_number=f"BED-{uuid.uuid4().hex[:8]}",
             ward_type=WardType.GENERAL,
             per_day_charge=Decimal("500.00")
         )
@@ -440,7 +440,7 @@ class TestAdvancePaymentApplication:
         # Create bed
         bed = await bed_crud.create_bed(
             db=db_session,
-            bed_number=f"BED{generate_unique_mobile()[:6]}",
+            bed_number=f"BED-{uuid.uuid4().hex[:8]}",
             ward_type=WardType.GENERAL,
             per_day_charge=Decimal("500.00")
         )
@@ -533,7 +533,7 @@ class TestAdvancePaymentApplication:
         # Create bed
         bed = await bed_crud.create_bed(
             db=db_session,
-            bed_number=f"BED{generate_unique_mobile()[:6]}",
+            bed_number=f"BED-{uuid.uuid4().hex[:8]}",
             ward_type=WardType.GENERAL,
             per_day_charge=Decimal("500.00")
         )

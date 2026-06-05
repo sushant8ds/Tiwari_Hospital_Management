@@ -55,9 +55,9 @@ class PatientCRUD:
             await db.refresh(patient)
             return patient
             
-        except IntegrityError:
+        except IntegrityError as e:
             await db.rollback()
-            raise ValueError("Mobile number already exists")
+            raise ValueError(f"Database integrity error: {str(e)}")
     
     async def get_patient_by_id(self, db: AsyncSession, patient_id: str) -> Optional[Patient]:
         """Get patient by ID"""
@@ -144,9 +144,9 @@ class PatientCRUD:
             await db.refresh(patient)
             return patient
             
-        except IntegrityError:
+        except IntegrityError as e:
             await db.rollback()
-            raise ValueError("Mobile number already exists")
+            raise ValueError(f"Database integrity error: {str(e)}")
     
     async def get_patient_history(self, db: AsyncSession, patient_id: str) -> Optional[Patient]:
         """Get patient with all related visits and IPD admissions"""

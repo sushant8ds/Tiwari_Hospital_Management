@@ -80,11 +80,12 @@
                                 <th>Patient</th>
                                 <th>Doctor</th>
                                 <th>Type</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="recent-opd">
                             <tr>
-                                <td colspan="4" class="text-center text-muted">Loading...</td>
+                                <td colspan="5" class="text-center text-muted">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -223,7 +224,7 @@ async function loadRecentOPD() {
         
         const tbody = document.getElementById('recent-opd');
         if (visits.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No recent registrations</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No recent registrations</td></tr>';
             return;
         }
         
@@ -234,15 +235,31 @@ async function loadRecentOPD() {
             });
             const patientName = visit.patient ? visit.patient.name : 'N/A';
             const doctorName = visit.doctor ? visit.doctor.name : 'N/A';
-            const visitType = visit.visit_type === 'OPD_NEW' ? 'New' : 'Follow-up';
-            const badgeClass = visit.visit_type === 'OPD_NEW' ? 'badge-new' : 'badge-followup';
+            
+            let visitTypeStr = '';
+            let badgeClass = '';
+            if (visit.visit_type === 'OPD_NEW') {
+                visitTypeStr = 'New';
+                badgeClass = 'badge-new';
+            } else if (visit.visit_type === 'EMERGENCY') {
+                visitTypeStr = 'Emergency';
+                badgeClass = 'badge bg-danger text-white';
+            } else {
+                visitTypeStr = 'Follow-up';
+                badgeClass = 'badge-followup';
+            }
             
             return `
                 <tr>
                     <td>${time}</td>
                     <td>${patientName}</td>
                     <td>${doctorName}</td>
-                    <td><span class="badge ${badgeClass}">${visitType}</span></td>
+                    <td><span class="badge ${badgeClass}">${visitTypeStr}</span></td>
+                    <td>
+                        <a href="/api/v1/slips/print/opd/${visit.visit_id}" target="_blank" class="btn btn-sm btn-outline-primary py-0">
+                            <i class="fas fa-print"></i> Print Slip
+                        </a>
+                    </td>
                 </tr>
             `;
         }).join('');

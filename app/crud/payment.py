@@ -3,7 +3,7 @@ CRUD operations for payment processing and tracking
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, cast, Date
 from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional, List
@@ -300,22 +300,28 @@ class PaymentCrud:
         target_date: Optional[date] = None
     ) -> Decimal:
         """Get total collection for a specific date (defaults to today)"""
+        from datetime import time
         if target_date is None:
             target_date = date.today()
         elif isinstance(target_date, datetime):
             target_date = target_date.date()
         
-        # Query payments for the specified date
+        start_datetime = datetime.combine(target_date, time.min)
+        end_datetime = datetime.combine(target_date, time.max)
+        
+        # Query payments for the specified date range
         result = await db.execute(
             select(func.sum(Payment.amount))
             .where(
-                func.date(Payment.payment_date) == target_date,
+                Payment.payment_date >= start_datetime,
+                Payment.payment_date <= end_datetime,
                 Payment.payment_status == PaymentStatus.COMPLETED
             )
         )
         total = result.scalar()
         
         return Decimal(str(total)) if total else Decimal("0.00")
+
 
 
 # Create singleton instance

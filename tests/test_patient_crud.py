@@ -72,9 +72,9 @@ async def test_create_patient_empty_name(db_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_create_patient_duplicate_mobile(db_session: AsyncSession):
-    """Test patient creation with duplicate mobile number."""
+    """Test patient creation with duplicate mobile number is allowed."""
     # Create first patient
-    await patient_crud.create_patient(
+    p1 = await patient_crud.create_patient(
         db=db_session,
         name="John Doe",
         age=35,
@@ -83,16 +83,17 @@ async def test_create_patient_duplicate_mobile(db_session: AsyncSession):
         mobile_number="9876543210"
     )
     
-    # Try to create second patient with same mobile
-    with pytest.raises(ValueError, match="Mobile number already exists"):
-        await patient_crud.create_patient(
-            db=db_session,
-            name="Jane Doe",
-            age=30,
-            gender=Gender.FEMALE,
-            address="456 Another Street",
-            mobile_number="9876543210"  # Duplicate mobile
-        )
+    # Try to create second patient with same mobile (should succeed)
+    p2 = await patient_crud.create_patient(
+        db=db_session,
+        name="Jane Doe",
+        age=30,
+        gender=Gender.FEMALE,
+        address="456 Another Street",
+        mobile_number="9876543210"  # Duplicate mobile
+    )
+    assert p1.patient_id != p2.patient_id
+    assert p1.mobile_number == p2.mobile_number
 
 
 @pytest.mark.asyncio

@@ -243,24 +243,30 @@ class OTCrud:
         db: AsyncSession
     ) -> List[OTProcedure]:
         """Get all OT procedures scheduled for tomorrow"""
-        from datetime import date, timedelta
-        from sqlalchemy import func
+        from datetime import datetime, date, timedelta, time
+        from app.models.ipd import IPDStatus
         from sqlalchemy.orm import selectinload
         
         tomorrow = date.today() + timedelta(days=1)
+        tomorrow_start = datetime.combine(tomorrow, time.min)
+        tomorrow_end = datetime.combine(tomorrow, time.max)
         
         result = await db.execute(
             select(OTProcedure)
+            .join(IPD)
             .options(
                 selectinload(OTProcedure.ipd).selectinload(IPD.patient),
                 selectinload(OTProcedure.ipd).selectinload(IPD.bed)
             )
             .where(
-                func.date(OTProcedure.operation_date) == tomorrow
+                OTProcedure.operation_date >= tomorrow_start,
+                OTProcedure.operation_date <= tomorrow_end,
+                IPD.status == IPDStatus.ADMITTED
             )
             .order_by(OTProcedure.operation_date.asc())
         )
         return result.scalars().all()
+
 
 
 # Create singleton instance
