@@ -52,11 +52,11 @@ async def init_database():
         
         if not existing_doctors:
             doctors_data = [
-                {"name": "Dr. Nitish Tiwari", "department": "Orthopedics", "new_fee": 500, "followup_fee": 300},
-                {"name": "Dr. Muskan Tiwari", "department": "Dentist", "new_fee": 400, "followup_fee": 250},
-                {"name": "Dr. Rajesh Kumar", "department": "General Medicine", "new_fee": 300, "followup_fee": 200},
-                {"name": "Dr. Priya Sharma", "department": "Pediatrics", "new_fee": 350, "followup_fee": 250},
-                {"name": "Dr. Amit Singh", "department": "Surgery", "new_fee": 500, "followup_fee": 300},
+                {"name": "Dr. Nitish Tiwari", "department": "Orthopedics", "new_fee": 300, "followup_fee": 150},
+                {"name": "Dr. Muskan Tiwari", "department": "Dentist", "new_fee": 300, "followup_fee": 150},
+                {"name": "Dr. Rajesh Kumar", "department": "General Medicine", "new_fee": 300, "followup_fee": 150},
+                {"name": "Dr. Priya Sharma", "department": "Pediatrics", "new_fee": 300, "followup_fee": 150},
+                {"name": "Dr. Amit Singh", "department": "Surgery", "new_fee": 300, "followup_fee": 150},
             ]
             
             for idx, doc_data in enumerate(doctors_data, start=1):
@@ -83,9 +83,11 @@ async def init_database():
         
         if not existing_beds:
             beds_data = [
-                {"ward": WardType.GENERAL, "count": 10, "charge": 500},
-                {"ward": WardType.SEMI_PRIVATE, "count": 5, "charge": 1000},
-                {"ward": WardType.PRIVATE, "count": 5, "charge": 2000},
+                {"prefix": "GEN", "ward": WardType.GENERAL, "count": 10, "charge": 500},
+                {"prefix": "DNAC", "ward": WardType.SEMI_PRIVATE, "count": 5, "charge": 700},
+                {"prefix": "DAC", "ward": WardType.SEMI_PRIVATE, "count": 5, "charge": 1100},
+                {"prefix": "SNAC", "ward": WardType.PRIVATE, "count": 5, "charge": 1000},
+                {"prefix": "SAC", "ward": WardType.PRIVATE, "count": 5, "charge": 1500},
             ]
             
             bed_counter = 1
@@ -93,7 +95,7 @@ async def init_database():
                 for i in range(1, ward_info["count"] + 1):
                     bed = Bed(
                         bed_id=generate_bed_id(bed_counter),
-                        bed_number=f"{ward_info['ward'].value[:3]}-{i:02d}",
+                        bed_number=f"{ward_info['prefix']}-{i:02d}",
                         ward_type=ward_info["ward"],
                         per_day_charge=Decimal(str(ward_info["charge"])),
                         status=BedStatus.AVAILABLE

@@ -62,40 +62,40 @@ async def create_sample_doctors():
                 doctor_id="D001",
                 name="Dr. Rajesh Kumar",
                 department="Cardiology",
-                new_patient_fee=500.00,
-                followup_fee=300.00,
+                new_patient_fee=300.00,
+                followup_fee=150.00,
                 status=DoctorStatus.ACTIVE
             ),
             Doctor(
                 doctor_id="D002",
                 name="Dr. Priya Sharma",
                 department="Pediatrics",
-                new_patient_fee=400.00,
-                followup_fee=250.00,
+                new_patient_fee=300.00,
+                followup_fee=150.00,
                 status=DoctorStatus.ACTIVE
             ),
             Doctor(
                 doctor_id="D003",
                 name="Dr. Amit Singh",
                 department="Orthopedics",
-                new_patient_fee=600.00,
-                followup_fee=350.00,
+                new_patient_fee=300.00,
+                followup_fee=150.00,
                 status=DoctorStatus.ACTIVE
             ),
             Doctor(
                 doctor_id="D004",
                 name="Dr. Sunita Patel",
                 department="Gynecology",
-                new_patient_fee=450.00,
-                followup_fee=275.00,
+                new_patient_fee=300.00,
+                followup_fee=150.00,
                 status=DoctorStatus.ACTIVE
             ),
             Doctor(
                 doctor_id="D005",
                 name="Dr. Vikram Gupta",
                 department="General Medicine",
-                new_patient_fee=350.00,
-                followup_fee=200.00,
+                new_patient_fee=300.00,
+                followup_fee=150.00,
                 status=DoctorStatus.ACTIVE
             )
         ]
@@ -111,33 +111,53 @@ async def create_sample_beds():
     async with AsyncSessionLocal() as session:
         beds = []
         
-        # General ward beds (1-20)
+        # General ward beds (1-20) - General: 500
         for i in range(1, 21):
             beds.append(Bed(
                 bed_id=f"B{i:03d}",
-                bed_number=f"G{i:02d}",
+                bed_number=f"GEN-{i:02d}",
                 ward_type=WardType.GENERAL,
                 per_day_charge=500.00,
                 status=BedStatus.AVAILABLE
             ))
         
-        # Semi-private beds (21-30)
-        for i in range(21, 31):
+        # Double sharing non-AC (21-25) - charge 700
+        for i in range(21, 26):
             beds.append(Bed(
                 bed_id=f"B{i:03d}",
-                bed_number=f"SP{i-20:02d}",
+                bed_number=f"DNAC-{i-20:02d}",
                 ward_type=WardType.SEMI_PRIVATE,
-                per_day_charge=1000.00,
+                per_day_charge=700.00,
+                status=BedStatus.AVAILABLE
+            ))
+            
+        # Double sharing AC (26-30) - charge 1100
+        for i in range(26, 31):
+            beds.append(Bed(
+                bed_id=f"B{i:03d}",
+                bed_number=f"DAC-{i-25:02d}",
+                ward_type=WardType.SEMI_PRIVATE,
+                per_day_charge=1100.00,
                 status=BedStatus.AVAILABLE
             ))
         
-        # Private beds (31-40)
-        for i in range(31, 41):
+        # Single private non-AC (31-35) - charge 1000
+        for i in range(31, 36):
             beds.append(Bed(
                 bed_id=f"B{i:03d}",
-                bed_number=f"P{i-30:02d}",
+                bed_number=f"SNAC-{i-30:02d}",
                 ward_type=WardType.PRIVATE,
-                per_day_charge=2000.00,
+                per_day_charge=1000.00,
+                status=BedStatus.AVAILABLE
+            ))
+            
+        # Single private AC (36-40) - charge 1500
+        for i in range(36, 41):
+            beds.append(Bed(
+                bed_id=f"B{i:03d}",
+                bed_number=f"SAC-{i-35:02d}",
+                ward_type=WardType.PRIVATE,
+                per_day_charge=1500.00,
                 status=BedStatus.AVAILABLE
             ))
         
@@ -146,8 +166,10 @@ async def create_sample_beds():
     
     print("✓ Sample beds created")
     print("  - General ward: 20 beds (₹500/day)")
-    print("  - Semi-private: 10 beds (₹1000/day)")
-    print("  - Private: 10 beds (₹2000/day)")
+    print("  - Double sharing Non-AC: 5 beds (₹700/day)")
+    print("  - Double sharing AC: 5 beds (₹1100/day)")
+    print("  - Single Private Non-AC: 5 beds (₹1000/day)")
+    print("  - Single Private AC: 5 beds (₹1500/day)")
 
 
 async def main():
