@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours - full work shift
     
     # Hospital Information
-    HOSPITAL_NAME: str = "Dr. Subash Memorial Hospital"
+    HOSPITAL_NAME: str = "Surya Hospital"
     HOSPITAL_ADDRESS: str = "Tamkuhi Raj, Kushinagar, Uttar Pradesh - 274407"
     HOSPITAL_PHONE: str = "+91-9580845238"
     HOSPITAL_LOGO_PATH: str = "static/images/hospital_logo.png"

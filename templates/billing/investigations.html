@@ -265,6 +265,15 @@ async function loadPatientVisits(patientId) {
             if (activeIpd) {
                 selectedIpd = activeIpd;
                 document.getElementById('selectedIpdId').value = activeIpd.ipd_id;
+                
+                // Fetch current available advance balance
+                const balanceRes = await fetch(`/api/v1/payments/patient/${patientId}/balance?ipd_id=${activeIpd.ipd_id}`, { headers: getHeaders() });
+                if (balanceRes.ok) {
+                    const balanceData = await balanceRes.json();
+                    selectedIpd.advance_balance = balanceData.advance_balance;
+                } else {
+                    selectedIpd.advance_balance = 0;
+                }
             }
         }
     } catch (error) {
@@ -298,10 +307,12 @@ function displayPatientInfo(patient, visits) {
     if (selectedIpd) {
         const bedNum = selectedIpd.bed ? selectedIpd.bed.bed_number : 'N/A';
         const docName = selectedIpd.attending_doctor ? selectedIpd.attending_doctor.name : 'N/A';
+        const advBal = selectedIpd.advance_balance || 0;
         visitsHtml = `
             <div class="alert alert-warning mt-2">
                 <strong>Current Admission (IPD):</strong> Bed ${bedNum}
                 <br><strong>Attending Doctor:</strong> Dr. ${docName}
+                <br><strong>Available Advance Balance:</strong> <span class="badge bg-success fs-6">₹${parseFloat(advBal).toFixed(2)}</span>
                 <br><small class="text-danger fw-bold">Note: Charges will be added to In-Patient Department bill</small>
             </div>
         `;
@@ -352,11 +363,28 @@ function showChargesForm() {
     document.getElementById('patientName').textContent = selectedPatient.name;
     document.getElementById('patientId').textContent = selectedPatient.patient_id;
     
+    // Reset payment mode select dropdown to standard modes
+    const paymentModeSelect = document.getElementById('paymentMode');
+    paymentModeSelect.innerHTML = `
+        <option value="CASH">Cash</option>
+        <option value="UPI">UPI</option>
+        <option value="CARD">Card</option>
+    `;
+    
     if (selectedIpd) {
         const bedNum = selectedIpd.bed ? selectedIpd.bed.bed_number : 'N/A';
         document.getElementById('visitType').textContent = `IPD Admission - Bed ${bedNum}`;
         document.getElementById('selectedIpdId').value = selectedIpd.ipd_id;
         document.getElementById('selectedVisitId').value = '';
+        
+        // Add ADVANCE option if patient is admitted and has advance balance
+        const advBal = selectedIpd.advance_balance || 0;
+        if (advBal > 0) {
+            const advOption = document.createElement('option');
+            advOption.value = 'ADVANCE';
+            advOption.textContent = `Pay from Advance (Available: ₹${parseFloat(advBal).toFixed(2)})`;
+            paymentModeSelect.appendChild(advOption);
+        }
     } else if (selectedVisit) {
         document.getElementById('visitType').textContent = selectedVisit.visit_type === 'OPD_NEW' ? 'OPD - New' : 'OPD - Follow-up';
         document.getElementById('selectedVisitId').value = selectedVisit.visit_id;
@@ -554,14 +582,24 @@ document.getElementById('saveChargesBtn').addEventListener('click', async functi
         return;
     }
     
+    // Calculate total amount
+    const totalAmount = charges.reduce((sum, charge) => sum + charge.total_amount, 0);
+    
+    // Validate advance balance if Pay from Advance is selected
+    if (paymentMode === 'ADVANCE') {
+        const advBal = selectedIpd ? (selectedIpd.advance_balance || 0) : 0;
+        if (totalAmount > advBal) {
+            showToast(`Insufficient advance balance (Available: ₹${parseFloat(advBal).toFixed(2)}, Required: ₹${totalAmount.toFixed(2)}). Please select another payment mode.`, 'error');
+            return;
+        }
+    }
+    
     const saveBtn = this;
     const originalText = saveBtn.innerHTML;
     saveBtn.disabled = true;
     saveBtn.innerHTML = '<span class="btn-spinner me-2"></span>Saving...';
     
     try {
-        // Calculate total amount
-        const totalAmount = charges.reduce((sum, charge) => sum + charge.total_amount, 0);
         
         // Group charges by type
         const chargesByType = {

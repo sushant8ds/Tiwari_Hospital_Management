@@ -25,7 +25,7 @@ class PaymentBase(BaseModel):
     @validator('payment_mode')
     def validate_payment_mode(cls, v):
         """Validate payment mode"""
-        valid_modes = ['CASH', 'UPI', 'CARD']
+        valid_modes = ['CASH', 'UPI', 'CARD', 'ADVANCE']
         if v.upper() not in valid_modes:
             raise ValueError(f'Payment mode must be one of: {", ".join(valid_modes)}')
         return v.upper()
@@ -76,7 +76,7 @@ class AdvancePaymentRequest(BaseModel):
     @validator('payment_mode')
     def validate_payment_mode(cls, v):
         """Validate payment mode"""
-        valid_modes = ['CASH', 'UPI', 'CARD']
+        valid_modes = ['CASH', 'UPI', 'CARD', 'ADVANCE']
         if v.upper() not in valid_modes:
             raise ValueError(f'Payment mode must be one of: {", ".join(valid_modes)}')
         return v.upper()

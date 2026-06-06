@@ -48,5 +48,15 @@ class IPD(Base):
     payments = relationship("Payment", back_populates="ipd")
     slips = relationship("Slip", back_populates="ipd")
     
+    @property
+    def total_bill(self) -> float:
+        """Calculate total bill including file charge and all billing charges minus discount"""
+        from decimal import Decimal
+        total = Decimal(str(self.file_charge))
+        if self.billing_charges:
+            total += sum(Decimal(str(c.total_amount)) for c in self.billing_charges)
+        total -= Decimal(str(self.discount))
+        return float(total)
+
     def __repr__(self):
         return f"<IPD(ipd_id='{self.ipd_id}', patient_id='{self.patient_id}', status='{self.status}')>"

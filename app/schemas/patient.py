@@ -101,6 +101,7 @@ class IPDSummary(BaseModel):
     admission_date: datetime
     discharge_date: Optional[datetime]
     file_charge: float
+    total_bill: float
     bed_id: str
     status: str
     created_date: datetime

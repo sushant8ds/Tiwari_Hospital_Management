@@ -63,9 +63,20 @@ class PaymentCrud:
             raise ValueError("Amount must be positive")
         
         # Validate payment mode
-        valid_modes = ['CASH', 'UPI', 'CARD']
+        valid_modes = ['CASH', 'UPI', 'CARD', 'ADVANCE']
         if payment_mode.upper() not in valid_modes:
             raise ValueError(f"Payment mode must be one of: {', '.join(valid_modes)}")
+        
+        if payment_mode.upper() == "ADVANCE":
+            if not ipd_id:
+                raise ValueError("Payment from advance is only allowed for IPD admissions")
+            
+            # Calculate current advance balance
+            balance_info = await self.calculate_patient_balance(db, patient_id=patient_id, ipd_id=ipd_id)
+            if amount > balance_info["advance_balance"]:
+                raise ValueError(
+                    f"Insufficient advance balance (Available: {balance_info['advance_balance']}, Required: {amount})"
+                )
         
         try:
             # Generate payment ID
@@ -191,7 +202,8 @@ class PaymentCrud:
             select(Payment)
             .where(
                 Payment.ipd_id == ipd_id,
-                Payment.payment_type == PaymentType.IPD_ADVANCE
+                Payment.payment_type == PaymentType.IPD_ADVANCE,
+                Payment.payment_mode != "ADVANCE"
             )
             .order_by(Payment.payment_date.desc())
         )
@@ -205,7 +217,7 @@ class PaymentCrud:
         ipd_id: Optional[str] = None
     ) -> Decimal:
         """Calculate total amount paid"""
-        query = select(func.sum(Payment.amount))
+        query = select(func.sum(Payment.amount)).where(Payment.payment_mode != "ADVANCE")
         
         if patient_id:
             query = query.where(Payment.patient_id == patient_id)
@@ -280,7 +292,12 @@ class PaymentCrud:
         advance_balance = Decimal("0.00")
         if ipd_id:
             advance_payments = await self.get_advance_payments(db, ipd_id)
-            advance_balance = sum(p.amount for p in advance_payments)
+            total_advance = sum(p.amount for p in advance_payments)
+            
+            # Fetch all payments to calculate spent advance
+            all_payments = await self.get_payments_by_ipd(db, ipd_id)
+            spent_advance = sum(p.amount for p in all_payments if p.payment_mode == "ADVANCE")
+            advance_balance = total_advance - spent_advance
         
         # Calculate balance
         balance_due = total_charges - total_paid
@@ -315,7 +332,8 @@ class PaymentCrud:
             .where(
                 Payment.payment_date >= start_datetime,
                 Payment.payment_date <= end_datetime,
-                Payment.payment_status == PaymentStatus.COMPLETED
+                Payment.payment_status == PaymentStatus.COMPLETED,
+                Payment.payment_mode != "ADVANCE"
             )
         )
         total = result.scalar()

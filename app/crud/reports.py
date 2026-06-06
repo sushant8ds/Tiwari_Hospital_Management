@@ -170,7 +170,8 @@ class ReportsCRUD:
                 "ipd_id": payment.ipd_id
             }
             history["payments"].append(payment_data)
-            history["summary"]["total_paid"] += payment.amount
+            if payment.payment_mode != "ADVANCE":
+                history["summary"]["total_paid"] += payment.amount
         
         # Calculate balance
         history["summary"]["balance_due"] = history["summary"]["total_charges"] - history["summary"]["total_paid"]
@@ -454,7 +455,8 @@ class ReportsCRUD:
             and_(
                 Payment.payment_date >= start_datetime,
                 Payment.payment_date <= end_datetime,
-                Payment.payment_status == PaymentStatus.COMPLETED
+                Payment.payment_status == PaymentStatus.COMPLETED,
+                Payment.payment_mode != "ADVANCE"
             )
         ).order_by(Payment.payment_date.asc())
 

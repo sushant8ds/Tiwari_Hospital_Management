@@ -329,7 +329,9 @@ function displayPatientDetails(patient, history) {
                             <th>Admission Date</th>
                             <th>Discharge Date</th>
                             <th>File Charge</th>
+                            <th>Total Bill</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -341,8 +343,21 @@ function displayPatientDetails(patient, history) {
                     <td>${ipd.ipd_id}</td>
                     <td>${formatDate(ipd.admission_date)}</td>
                     <td>${ipd.discharge_date ? formatDate(ipd.discharge_date) : 'Not discharged'}</td>
-                    <td>₹${ipd.file_charge}</td>
+                    <td>₹${ipd.file_charge.toFixed(2)}</td>
+                    <td class="fw-bold">₹${ipd.total_bill.toFixed(2)}</td>
                     <td><span class="status-badge status-${ipd.status.toLowerCase()}">${ipd.status}</span></td>
+                    <td>
+                        ${ipd.status === 'DISCHARGED' ? `
+                            <button class="btn btn-sm btn-primary" onclick="printDischargeSlip('${ipd.ipd_id}')" style="padding: 4px 8px; font-size: 12px; margin-right: 5px;">
+                                <i class="fas fa-print"></i> Bill
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="shareDischargeWhatsApp('${ipd.ipd_id}', '${patient.name}', '${patient.mobile_number}')" style="padding: 4px 8px; font-size: 12px; background-color: #25D366; border-color: #25D366; color: white;">
+                                <i class="fab fa-whatsapp"></i> Share
+                            </button>
+                        ` : `
+                            <span class="text-muted small">Admitted</span>
+                        `}
+                    </td>
                 </tr>
             `;
         });
@@ -392,8 +407,48 @@ function shareWhatsApp(visitId, name, mobileNumber) {
         mobile = '91' + mobile;
     }
     const slipUrl = `${window.location.origin}/api/v1/slips/print/opd/${visitId}`;
-    const text = `*Tiwari Hospital*\n\nHello, here is the OPD Slip for patient *${name}*:\n${slipUrl}`;
+    const text = `*Surya Hospital*\n\nHello, here is the OPD Slip for patient *${name}*:\n${slipUrl}`;
     window.open(`https://wa.me/${mobile}?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+async function printDischargeSlip(ipdId) {
+    try {
+        const response = await fetch(`/api/v1/slips/ipd/${ipdId}`);
+        if (!response.ok) throw new Error("Failed to fetch slips");
+        const slips = await response.json();
+        const dischargeSlip = slips.find(s => s.slip_type === 'Discharge Bill');
+        if (dischargeSlip) {
+            window.open(`/api/v1/slips/print/${dischargeSlip.slip_id}`, '_blank');
+        } else {
+            alert("Discharge summary slip not found. Please verify if the patient has been discharged.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Error retrieving discharge slip.");
+    }
+}
+
+async function shareDischargeWhatsApp(ipdId, name, mobileNumber) {
+    try {
+        const response = await fetch(`/api/v1/slips/ipd/${ipdId}`);
+        if (!response.ok) throw new Error("Failed to fetch slips");
+        const slips = await response.json();
+        const dischargeSlip = slips.find(s => s.slip_type === 'Discharge Bill');
+        if (dischargeSlip) {
+            let mobile = mobileNumber.replace(/\D/g, '');
+            if (mobile.length === 10) {
+                mobile = '91' + mobile;
+            }
+            const slipUrl = `${window.location.origin}/api/v1/slips/print/${dischargeSlip.slip_id}`;
+            const text = `*Surya Hospital*\n\nHello, here is the Final Bill and Discharge Summary for patient *${name}*:\n${slipUrl}`;
+            window.open(`https://wa.me/${mobile}?text=${encodeURIComponent(text)}`, '_blank');
+        } else {
+            alert("Discharge summary slip not found. Please verify if the patient has been discharged.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Error retrieving discharge slip.");
+    }
 }
 </script>
 

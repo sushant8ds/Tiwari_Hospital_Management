@@ -151,12 +151,13 @@ class PatientCRUD:
     async def get_patient_history(self, db: AsyncSession, patient_id: str) -> Optional[Patient]:
         """Get patient with all related visits and IPD admissions"""
         from sqlalchemy.orm import selectinload
+        from app.models.ipd import IPD
         
         result = await db.execute(
             select(Patient)
             .options(
                 selectinload(Patient.visits),
-                selectinload(Patient.ipd_admissions)
+                selectinload(Patient.ipd_admissions).selectinload(IPD.billing_charges)
             )
             .where(Patient.patient_id == patient_id)
         )

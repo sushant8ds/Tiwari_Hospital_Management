@@ -108,9 +108,10 @@ class DischargeCRUD:
         payment_details = []
         
         for payment in payments:
-            total_paid += payment.amount
-            if payment.payment_type == PaymentType.IPD_ADVANCE:
-                advance_paid += payment.amount
+            if payment.payment_mode != "ADVANCE":
+                total_paid += payment.amount
+                if payment.payment_type == PaymentType.IPD_ADVANCE:
+                    advance_paid += payment.amount
             
             payment_details.append({
                 "payment_id": payment.payment_id,
