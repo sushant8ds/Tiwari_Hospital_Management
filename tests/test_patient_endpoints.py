@@ -302,3 +302,124 @@ class TestPatientHistory:
         
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
+
+    async def test_get_patient_history_with_billing_charges(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession,
+        sample_patient: Patient
+    ):
+        """Test patient history includes billing charges for visits and IPD admissions"""
+        from app.crud.doctor import doctor_crud
+        from app.crud.visit import visit_crud
+        from app.crud.billing import billing_crud
+        from app.crud.ipd import ipd_crud, bed_crud
+        from app.models.visit import VisitType, PaymentMode
+        from app.models.billing import ChargeType
+        from decimal import Decimal
+        
+        # Create a doctor and a visit
+        doctor = await doctor_crud.create_doctor(
+            db=db_session,
+            name="Dr. Test",
+            department="General",
+            new_patient_fee=Decimal("500.00"),
+            followup_fee=Decimal("300.00")
+        )
+        visit = await visit_crud.create_visit(
+            db=db_session,
+            patient_id=sample_patient.patient_id,
+            doctor_id=doctor.doctor_id,
+            visit_type=VisitType.OPD_NEW,
+            payment_mode=PaymentMode.CASH
+        )
+        
+        # Add a billing charge to the visit
+        charge = await billing_crud.create_charge(
+            db=db_session,
+            visit_id=visit.visit_id,
+            charge_type=ChargeType.INVESTIGATION,
+            charge_name="Blood Test",
+            rate=Decimal("150.00"),
+            quantity=1,
+            created_by="test_user"
+        )
+        
+        await db_session.commit()
+        
+        # Fetch the history through endpoint
+        response = await async_client.get(
+            f"/api/v1/patients/{sample_patient.patient_id}/history"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Verify visit and its billing charges
+        assert len(data["visits"]) == 1
+        visit_data = data["visits"][0]
+        assert visit_data["visit_id"] == visit.visit_id
+        assert len(visit_data["billing_charges"]) == 1
+        charge_data = visit_data["billing_charges"][0]
+        assert charge_data["charge_name"] == "Blood Test"
+        assert float(charge_data["rate"]) == 150.00
+        assert charge_data["charge_type"] == "INVESTIGATION"
+
+    async def test_print_visit_bill_success(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession,
+        sample_patient: Patient
+    ):
+        """Test successful generation of printable consolidated visit bill HTML"""
+        from app.crud.doctor import doctor_crud
+        from app.crud.visit import visit_crud
+        from app.crud.billing import billing_crud
+        from app.models.visit import VisitType, PaymentMode
+        from app.models.billing import ChargeType
+        from decimal import Decimal
+        
+        # Create doctor
+        doctor = await doctor_crud.create_doctor(
+            db=db_session,
+            name="Dr. Smith",
+            department="Cardiology",
+            new_patient_fee=Decimal("600.00"),
+            followup_fee=Decimal("400.00")
+        )
+        
+        # Create visit
+        visit = await visit_crud.create_visit(
+            db=db_session,
+            patient_id=sample_patient.patient_id,
+            doctor_id=doctor.doctor_id,
+            visit_type=VisitType.OPD_NEW,
+            payment_mode=PaymentMode.UPI
+        )
+        
+        # Add investigation charge
+        await billing_crud.create_charge(
+            db=db_session,
+            visit_id=visit.visit_id,
+            charge_type=ChargeType.INVESTIGATION,
+            charge_name="ECG",
+            rate=Decimal("350.00"),
+            quantity=1,
+            created_by="test_user"
+        )
+        
+        await db_session.commit()
+        
+        # Print visit bill
+        response = await async_client.get(f"/api/v1/slips/print/visit-bill/{visit.visit_id}")
+        
+        assert response.status_code == 200
+        html = response.text
+        assert "OPD VISIT RECEIPT &amp; BILL" in html or "OPD VISIT RECEIPT & BILL" in html
+        assert "ECG" in html
+        assert "Cardiology" in html
+        assert "Dr. Smith" in html
+        assert "600.00" in html
+        assert "350.00" in html
+        assert "950.00" in html
+
+

@@ -296,18 +296,53 @@ function displayPatientDetails(patient, history) {
                     <td>${formatDate(visit.visit_date)}</td>
                     <td>${visit.visit_type}</td>
                     <td>${visit.department}</td>
-                    <td>₹${visit.opd_fee}</td>
+                    <td>₹${parseFloat(visit.opd_fee).toFixed(2)}</td>
                     <td><span class="status-badge status-${visit.status.toLowerCase()}">${visit.status}</span></td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="printOPDSlip('${visit.visit_id}')" style="padding: 4px 8px; font-size: 12px; margin-right: 5px;">
-                            <i class="fas fa-print"></i> Print
-                        </button>
-                        <button class="btn btn-sm btn-success" onclick="shareWhatsApp('${visit.visit_id}', '${patient.name}', '${patient.mobile_number}')" style="padding: 4px 8px; font-size: 12px; background-color: #25D366; border-color: #25D366; color: white;">
-                            <i class="fab fa-whatsapp"></i> Share
-                        </button>
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-sm" onclick="printOPDSlip('${visit.visit_id}')" style="padding: 4px 8px; font-size: 11px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <i class="fas fa-file-prescription"></i> Print Rx
+                                </button>
+                                <button class="btn btn-sm" onclick="shareWhatsApp('${visit.visit_id}', '${patient.name}', '${patient.mobile_number}')" style="padding: 4px 8px; font-size: 11px; background-color: #25D366; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <i class="fab fa-whatsapp"></i> Share Rx
+                                </button>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-sm" onclick="printVisitBill('${visit.visit_id}')" style="padding: 4px 8px; font-size: 11px; background-color: #8e44ad; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <i class="fas fa-file-invoice-dollar"></i> Print Bill
+                                </button>
+                                <button class="btn btn-sm" onclick="shareVisitBillWhatsApp('${visit.visit_id}', '${patient.name}', '${patient.mobile_number}')" style="padding: 4px 8px; font-size: 11px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <i class="fab fa-whatsapp"></i> Share Bill
+                                </button>
+                            </div>
+                        </div>
                     </td>
                 </tr>
             `;
+            
+            if (visit.billing_charges && visit.billing_charges.length > 0) {
+                html += `
+                    <tr class="charges-row" style="background-color: #fafbfc;">
+                        <td colspan="7" style="padding: 8px 12px 12px 24px; border-bottom: 1px solid #dee2e6;">
+                            <div style="font-size: 13px; font-weight: 600; color: #555; margin-bottom: 5px;">
+                                <i class="fas fa-file-invoice-dollar" style="color: #3498db; margin-right: 5px;"></i> Billing Charges Detail:
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                ${visit.billing_charges.map(c => `
+                                    <div style="background: #fff; border: 1px solid #e1e4e8; border-radius: 4px; padding: 6px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; gap: 15px; align-items: center;">
+                                        <span style="font-weight: 500; color: #2c3e50;">${c.charge_name}</span>
+                                        <span style="color: #6a737d; font-size: 12px;">Qty: ${c.quantity}</span>
+                                        <span style="color: #6a737d; font-size: 12px;">Rate: ₹${parseFloat(c.rate).toFixed(2)}</span>
+                                        <span style="font-weight: 600; color: #2c3e50;">Total: ₹${parseFloat(c.total_amount).toFixed(2)}</span>
+                                        <span class="status-badge" style="background: #e1f5fe; color: #0288d1; font-size: 10px; padding: 2px 6px; text-transform: uppercase;">${c.charge_type}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
         });
         
         html += `
@@ -360,6 +395,29 @@ function displayPatientDetails(patient, history) {
                     </td>
                 </tr>
             `;
+            
+            if (ipd.billing_charges && ipd.billing_charges.length > 0) {
+                html += `
+                    <tr class="charges-row" style="background-color: #fafbfc;">
+                        <td colspan="7" style="padding: 8px 12px 12px 24px; border-bottom: 1px solid #dee2e6;">
+                            <div style="font-size: 13px; font-weight: 600; color: #555; margin-bottom: 5px;">
+                                <i class="fas fa-file-invoice-dollar" style="color: #3498db; margin-right: 5px;"></i> Admission Charges Detail:
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                ${ipd.billing_charges.map(c => `
+                                    <div style="background: #fff; border: 1px solid #e1e4e8; border-radius: 4px; padding: 6px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; gap: 15px; align-items: center;">
+                                        <span style="font-weight: 500; color: #2c3e50;">${c.charge_name}</span>
+                                        <span style="color: #6a737d; font-size: 12px;">Qty: ${c.quantity}</span>
+                                        <span style="color: #6a737d; font-size: 12px;">Rate: ₹${parseFloat(c.rate).toFixed(2)}</span>
+                                        <span style="font-weight: 600; color: #2c3e50;">Total: ₹${parseFloat(c.total_amount).toFixed(2)}</span>
+                                        <span class="status-badge" style="background: #e1f5fe; color: #0288d1; font-size: 10px; padding: 2px 6px; text-transform: uppercase;">${c.charge_type}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
         });
         
         html += `
@@ -407,7 +465,21 @@ function shareWhatsApp(visitId, name, mobileNumber) {
         mobile = '91' + mobile;
     }
     const slipUrl = `${window.location.origin}/api/v1/slips/print/opd/${visitId}`;
-    const text = `*Surya Hospital*\n\nHello, here is the OPD Slip for patient *${name}*:\n${slipUrl}`;
+    const text = `*Surya Hospital*\n\nHello, here is the OPD Prescription Slip (Rx) for patient *${name}*:\n${slipUrl}`;
+    window.open(`https://wa.me/${mobile}?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function printVisitBill(visitId) {
+    window.open(`/api/v1/slips/print/visit-bill/${visitId}`, '_blank');
+}
+
+function shareVisitBillWhatsApp(visitId, name, mobileNumber) {
+    let mobile = mobileNumber.replace(/\D/g, '');
+    if (mobile.length === 10) {
+        mobile = '91' + mobile;
+    }
+    const slipUrl = `${window.location.origin}/api/v1/slips/print/visit-bill/${visitId}`;
+    const text = `*Surya Hospital*\n\nHello, here is the OPD Visit Bill/Receipt for patient *${name}*:\n${slipUrl}`;
     window.open(`https://wa.me/${mobile}?text=${encodeURIComponent(text)}`, '_blank');
 }
 

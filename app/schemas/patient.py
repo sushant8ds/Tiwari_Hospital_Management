@@ -7,6 +7,8 @@ from typing import Optional, List
 from datetime import datetime, date, time
 import re
 
+from app.schemas.billing import BillingChargeResponse
+
 
 class PatientBase(BaseModel):
     """Base patient schema"""
@@ -90,6 +92,7 @@ class VisitSummary(BaseModel):
     payment_mode: str
     status: str
     created_date: datetime
+    billing_charges: List[BillingChargeResponse] = []
     
     class Config:
         from_attributes = True
@@ -105,6 +108,7 @@ class IPDSummary(BaseModel):
     bed_id: str
     status: str
     created_date: datetime
+    billing_charges: List[BillingChargeResponse] = []
     
     class Config:
         from_attributes = True

@@ -269,7 +269,7 @@ async def print_opd_slip(
             <div class="header-section">
                 <div class="doctor-info">
                     <div class="doctor-name">{doctor.name}</div>
-                    <div class="doctor-details">M.B.B.S., General Physician</div>
+                    <div class="doctor-details">M.B.B.S., {doctor.department}</div>
                     <div class="doctor-details">पूर्व चिकित्सक- एम्स (AIIMS) गोरखपुर</div>
                     <div class="doctor-details">(रुद्री, जाड, मोतिहारी एवं नरकटियागंज)</div>
                     <div class="doctor-details" style="margin-top: 5px;">Phone: {settings.HOSPITAL_PHONE}</div>
@@ -365,6 +365,381 @@ async def print_opd_slip(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating slip: {str(e)}")
+
+
+@router.get("/print/visit-bill/{visit_id}")
+async def print_visit_bill(
+    visit_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate printable consolidated visit bill HTML (no authentication required for printing)"""
+    from fastapi.responses import HTMLResponse
+    from app.crud.visit import visit_crud
+    from app.core.config import settings
+    
+    try:
+        # Get visit details with patient and doctor loaded
+        visit = await visit_crud.get_visit_with_details(db, visit_id)
+        if not visit:
+            raise HTTPException(status_code=404, detail="Visit not found")
+        
+        # Get patient details
+        patient = visit.patient
+        doctor = visit.doctor
+        
+        # Format date
+        visit_date = visit.created_date.strftime("%d/%m/%Y")
+        
+        # Generate charges rows
+        charges_rows = ""
+        total_amount = float(visit.opd_fee)
+        
+        # 1. OPD Fee row
+        charges_rows += f"""
+        <tr>
+            <td>1</td>
+            <td>OPD Consultation Fee ({visit.visit_type.value if hasattr(visit.visit_type, 'value') else visit.visit_type})</td>
+            <td>OPD Fee</td>
+            <td>1</td>
+            <td>₹{float(visit.opd_fee):.2f}</td>
+            <td style="text-align: right;">₹{float(visit.opd_fee):.2f}</td>
+        </tr>
+        """
+        
+        # 2. Additional billing charges rows
+        for idx, charge in enumerate(visit.billing_charges, start=2):
+            total_amount += float(charge.total_amount)
+            charges_rows += f"""
+            <tr>
+                <td>{idx}</td>
+                <td>{charge.charge_name}</td>
+                <td>{charge.charge_type.value if hasattr(charge.charge_type, 'value') else charge.charge_type}</td>
+                <td>{charge.quantity}</td>
+                <td>₹{float(charge.rate):.2f}</td>
+                <td style="text-align: right;">₹{float(charge.total_amount):.2f}</td>
+            </tr>
+            """
+            
+        # Generate HTML slip
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Visit Bill - {patient.name}</title>
+            <style>
+                @page {{
+                    size: A4;
+                    margin: 10mm;
+                }}
+                body {{
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 15px;
+                    font-size: 11pt;
+                }}
+                .header-section {{
+                    display: flex;
+                    align-items: flex-start;
+                    border-bottom: 3px solid #1E88E5;
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
+                }}
+                .doctor-info {{
+                    flex: 0 0 35%;
+                    padding-right: 15px;
+                }}
+                .doctor-name {{
+                    font-size: 14pt;
+                    font-weight: bold;
+                    color: #2C3E50;
+                    margin-bottom: 5px;
+                }}
+                .doctor-details {{
+                    font-size: 8pt;
+                    color: #333;
+                    line-height: 1.3;
+                    margin: 2px 0;
+                }}
+                .hospital-info {{
+                    flex: 0 0 65%;
+                    text-align: center;
+                }}
+                .logo-container {{
+                    margin-bottom: 8px;
+                }}
+                .logo-container img {{
+                    max-width: 70px;
+                    max-height: 50px;
+                }}
+                .hospital-name {{
+                    font-size: 22pt;
+                    font-weight: bold;
+                    color: #2C3E50;
+                    margin: 5px 0;
+                }}
+                .hospital-address {{
+                    font-size: 9pt;
+                    color: #666;
+                    line-height: 1.2;
+                }}
+                .patient-box {{
+                    border: 2px solid #000;
+                    padding: 12px;
+                    margin-bottom: 15px;
+                    background: #f9f9f9;
+                }}
+                .patient-row {{
+                    margin: 6px 0;
+                    font-size: 10pt;
+                }}
+                .label {{
+                    font-weight: bold;
+                    color: #333;
+                }}
+                .bill-section {{
+                    margin-top: 20px;
+                    min-height: 450px;
+                    border: 1px solid #ddd;
+                    padding: 15px;
+                    background: white;
+                    border-radius: 4px;
+                }}
+                .bill-header {{
+                    font-size: 14pt;
+                    font-weight: bold;
+                    color: #2C3E50;
+                    margin-bottom: 15px;
+                    padding-bottom: 8px;
+                    border-bottom: 2px solid #1E88E5;
+                    text-align: center;
+                }}
+                .items-table {{
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                }}
+                .items-table th, .items-table td {{
+                    border: 1px solid #ddd;
+                    padding: 10px;
+                    text-align: left;
+                }}
+                .items-table th {{
+                    background-color: #f5f5f5;
+                    font-weight: bold;
+                }}
+                .total-row {{
+                    font-weight: bold;
+                    font-size: 1.1em;
+                    background-color: #f9f9f9;
+                }}
+                .footer {{
+                    margin-top: 20px;
+                    text-align: center;
+                    font-size: 8pt;
+                    color: #666;
+                    border-top: 1px solid #ddd;
+                    padding-top: 8px;
+                }}
+                .payment-bank-details {{
+                    margin-top: 20px;
+                    border: 1px solid #ccc;
+                    padding: 10px;
+                    background-color: #f9f9f9;
+                }}
+                .payment-grid {{
+                    display: grid;
+                    grid-template-columns: 1.2fr 1fr;
+                    gap: 15px;
+                }}
+                .bank-details, .upi-details {{
+                    font-size: 9pt;
+                }}
+                .no-print-banner {{
+                    background: #e9ecef;
+                    padding: 12px 20px;
+                    margin-bottom: 20px;
+                    border-radius: 6px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border: 1px solid #ced4da;
+                }}
+                .btn-print {{
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 6px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    margin-right: 10px;
+                    font-size: 9.5pt;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                }}
+                .btn-print:hover {{
+                    background: #0056b3;
+                }}
+                .btn-whatsapp {{
+                    background: #25d366;
+                    color: white;
+                    border: none;
+                    padding: 6px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    font-size: 9.5pt;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                }}
+                .btn-whatsapp:hover {{
+                    background: #1ebd56;
+                }}
+                @media print {{
+                    body {{
+                        padding: 0;
+                    }}
+                    .no-print {{
+                        display: none !important;
+                    }}
+                }}
+            </style>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        </head>
+        <body>
+            <!-- WhatsApp & Print Banner (Hidden on print) -->
+            <div class="no-print no-print-banner">
+                <span style="font-weight: bold; color: #333; font-size: 10.5pt;">
+                    <i class="fas fa-file-invoice-dollar text-primary" style="margin-right: 6px;"></i>Print Preview - Surya Hospital Bill
+                </span>
+                <div>
+                    <button onclick="window.print()" class="btn-print">
+                        <i class="fas fa-print" style="margin-right: 6px;"></i> Print Bill
+                    </button>
+                    <a id="whatsappShareBtn" href="#" target="_blank" class="btn-whatsapp">
+                        <i class="fab fa-whatsapp" style="margin-right: 6px; font-size: 1.1em;"></i> Share via WhatsApp
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Header Section: Doctor Info (Left) + Hospital Name (Center) -->
+            <div class="header-section">
+                <div class="doctor-info">
+                    <div class="doctor-name">{doctor.name}</div>
+                    <div class="doctor-details">M.B.B.S., {doctor.department}</div>
+                    <div class="doctor-details">पूर्व चिकित्सक- एम्स (AIIMS) गोरखपुर</div>
+                    <div class="doctor-details">(रुद्री, जाड, मोतिहारी एवं नरकटियागंज)</div>
+                    <div class="doctor-details" style="margin-top: 5px;">Phone: {settings.HOSPITAL_PHONE}</div>
+                    <div class="doctor-details">Email: drnitish{doctor.name.split()[-1].lower()}35@gmail.com</div>
+                </div>
+                
+                <div class="hospital-info">
+                    <div class="logo-container">
+                        <img src="/static/images/hospital_logo.png" alt="Hospital Logo" onerror="this.style.display='none'">
+                    </div>
+                    <div class="hospital-name">{settings.HOSPITAL_NAME.upper()}</div>
+                    <div class="hospital-address">{settings.HOSPITAL_ADDRESS}</div>
+                    <div class="hospital-address">Phone: {settings.HOSPITAL_PHONE}</div>
+                </div>
+            </div>
+            
+            <!-- Patient Details -->
+            <div class="patient-box">
+                <div class="patient-row">
+                    <span class="label">Patient Name:</span> {patient.name}
+                    <span style="float: right;"><span class="label">Age/Sex:</span> {patient.age}/{patient.gender.value if hasattr(patient.gender, 'value') else patient.gender}</span>
+                </div>
+                <div class="patient-row">
+                    <span class="label">Address:</span> {patient.address or 'N/A'}
+                </div>
+                <div class="patient-row">
+                    <span class="label">Mobile:</span> {patient.mobile_number}
+                    <span style="float: right;"><span class="label">Date:</span> {visit_date}</span>
+                </div>
+                <div class="patient-row">
+                    <span class="label">Patient ID:</span> {patient.patient_id}
+                    <span style="float: right;"><span class="label">Visit ID:</span> {visit.visit_id}</span>
+                </div>
+            </div>
+            
+            <!-- Bill Section -->
+            <div class="bill-section">
+                <div class="bill-header">OPD VISIT RECEIPT & BILL</div>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Qty</th>
+                            <th>Rate</th>
+                            <th style="text-align: right;">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {charges_rows}
+                        <tr class="total-row">
+                            <td colspan="5" style="text-align: right; font-weight: bold;">Grand Total:</td>
+                            <td style="text-align: right; font-weight: bold; color: #2C3E50;">₹{total_amount:.2f}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Payment & Bank Options -->
+            <div class="payment-bank-details">
+                <div style="font-weight: bold; color: #2C3E50; border-bottom: 1px solid #1E88E5; margin-bottom: 8px; padding-bottom: 3px; font-size: 9.5pt;">
+                    Payment Options & Bank Details
+                </div>
+                <div class="payment-grid">
+                    <div class="bank-details">
+                        <strong>Bank Account Transfer (IMPS/NEFT):</strong><br>
+                        Bank Name: State Bank of India<br>
+                        Account Number: 12345678901<br>
+                        IFSC Code: SBIN0001234<br>
+                        Account Holder Name: SURYA HOSPITAL
+                    </div>
+                    <div class="upi-details">
+                        <strong>UPI/QR Payment:</strong><br>
+                        UPI ID: <span>suryahospital@okaxis</span><br>
+                        <div style="margin-top: 5px; font-size: 8.5pt; color: #555;">
+                            * You can scan and pay using GPay, PhonePe, Paytm, or any UPI app. Please verify the name <strong>SURYA HOSPITAL</strong> before paying.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+                <p>{settings.HOSPITAL_ADDRESS} | (Thank You for Choosing Surya Hospital)</p>
+            </div>
+            
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {{
+                    const mobile = "{patient.mobile_number}";
+                    const cleanMobile = mobile.replace(/\\D/g, "");
+                    const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
+                    const currentUrl = window.location.href;
+                    const text = encodeURIComponent("Hello, here is your OPD Visit Bill from Surya Hospital: " + currentUrl);
+                    document.getElementById("whatsappShareBtn").href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
+                }});
+                
+                // Auto-print when page loads
+                window.onload = function() {{
+                    window.print();
+                }};
+            </script>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating visit bill: {str(e)}")
 
 
 @router.get("/print/{slip_id}")
