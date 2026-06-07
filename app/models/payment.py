@@ -36,9 +36,9 @@ class Payment(Base):
     __tablename__ = "payments"
     
     payment_id = Column(String(30), primary_key=True)
-    patient_id = Column(String(20), ForeignKey("patients.patient_id"), nullable=False)
-    visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True)
-    ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=True)
+    patient_id = Column(String(20), ForeignKey("patients.patient_id"), nullable=False, index=True)
+    visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True, index=True)
+    ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=True, index=True)
     payment_type = Column(Enum(PaymentType), nullable=False)
     amount = Column(Numeric(10, 2), nullable=False)
     payment_mode = Column(String(20), nullable=False)

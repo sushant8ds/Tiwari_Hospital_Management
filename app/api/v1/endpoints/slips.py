@@ -99,7 +99,7 @@ async def print_opd_slip(
                 .header-section {{
                     display: flex;
                     align-items: flex-start;
-                    border-bottom: 3px solid #8B0000;
+                    border-bottom: 3px solid #1E88E5;
                     padding-bottom: 15px;
                     margin-bottom: 20px;
                 }}
@@ -110,7 +110,7 @@ async def print_opd_slip(
                 .doctor-name {{
                     font-size: 14pt;
                     font-weight: bold;
-                    color: #8B0000;
+                    color: #2C3E50;
                     margin-bottom: 5px;
                 }}
                 .doctor-details {{
@@ -133,7 +133,7 @@ async def print_opd_slip(
                 .hospital-name {{
                     font-size: 22pt;
                     font-weight: bold;
-                    color: #8B0000;
+                    color: #2C3E50;
                     margin: 5px 0;
                 }}
                 .hospital-address {{
@@ -165,10 +165,10 @@ async def print_opd_slip(
                 .prescription-header {{
                     font-size: 11pt;
                     font-weight: bold;
-                    color: #8B0000;
+                    color: #2C3E50;
                     margin-bottom: 15px;
                     padding-bottom: 8px;
-                    border-bottom: 1px solid #ddd;
+                    border-bottom: 1px solid #1E88E5;
                 }}
                 .footer {{
                     margin-top: 20px;
@@ -253,7 +253,7 @@ async def print_opd_slip(
             <!-- WhatsApp & Print Banner (Hidden on print) -->
             <div class="no-print no-print-banner">
                 <span style="font-weight: bold; color: #333; font-size: 10.5pt;">
-                    <i class="fas fa-file-medical text-primary" style="margin-right: 6px;"></i>Print Preview - Tiwari Hospital
+                    <i class="fas fa-file-medical text-primary" style="margin-right: 6px;"></i>Print Preview - Surya Hospital
                 </span>
                 <div>
                     <button onclick="window.print()" class="btn-print">
@@ -274,7 +274,7 @@ async def print_opd_slip(
                     <div class="doctor-details">(रुद्री, जाड, मोतिहारी एवं नरकटियागंज)</div>
                     <div class="doctor-details" style="margin-top: 5px;">Phone: {settings.HOSPITAL_PHONE}</div>
                     <div class="doctor-details">Email: drnitish{doctor.name.split()[-1].lower()}35@gmail.com</div>
-                    <div class="doctor-details" style="color: #8B0000; font-weight: bold; margin-top: 5px; font-size: 7pt;">
+                    <div class="doctor-details" style="color: #2C3E50; font-weight: bold; margin-top: 5px; font-size: 7pt;">
                         (सोमवार से शनिवार, दोपहर 02 बजे से शाम 06 बजे तक)
                     </div>
                 </div>
@@ -316,7 +316,7 @@ async def print_opd_slip(
             
             <!-- Payment & Bank Options -->
             <div class="payment-bank-details">
-                <div style="font-weight: bold; color: #8B0000; border-bottom: 1px solid #ddd; margin-bottom: 8px; padding-bottom: 3px; font-size: 9.5pt;">
+                <div style="font-weight: bold; color: #2C3E50; border-bottom: 1px solid #1E88E5; margin-bottom: 8px; padding-bottom: 3px; font-size: 9.5pt;">
                     Payment Options & Bank Details
                 </div>
                 <div class="payment-grid">
@@ -325,13 +325,13 @@ async def print_opd_slip(
                         Bank Name: State Bank of India<br>
                         Account Number: 12345678901<br>
                         IFSC Code: SBIN0001234<br>
-                        Account Holder Name: TIWARI HOSPITAL
+                        Account Holder Name: SURYA HOSPITAL
                     </div>
                     <div class="upi-details">
                         <strong>UPI/QR Payment:</strong><br>
-                        UPI ID: <span>tiwarihospital@okaxis</span><br>
+                        UPI ID: <span>suryahospital@okaxis</span><br>
                         <div style="margin-top: 5px; font-size: 8.5pt; color: #555;">
-                            * You can scan and pay using GPay, PhonePe, Paytm, or any UPI app. Please verify the name <strong>TIWARI HOSPITAL</strong> before paying.
+                            * You can scan and pay using GPay, PhonePe, Paytm, or any UPI app. Please verify the name <strong>SURYA HOSPITAL</strong> before paying.
                         </div>
                     </div>
                 </div>
@@ -348,7 +348,7 @@ async def print_opd_slip(
                     const cleanMobile = mobile.replace(/\\D/g, "");
                     const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
                     const currentUrl = window.location.href;
-                    const text = encodeURIComponent("Hello, here is your OPD Slip from Tiwari Hospital: " + currentUrl);
+                    const text = encodeURIComponent("Hello, here is your OPD Slip from Surya Hospital: " + currentUrl);
                     document.getElementById("whatsappShareBtn").href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
                 }});
                 
@@ -402,7 +402,7 @@ async def print_slip(
         charges = content.get("charges", {})
         body_html = f"""
         <div class="info-section">
-            <div style="font-weight: bold; font-size: 1.1em; color: #8B0000; border-bottom: 2px solid #8B0000; margin-bottom: 10px; padding-bottom: 5px;">
+            <div style="font-weight: bold; font-size: 1.1em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 10px; padding-bottom: 5px;">
                 OPD REGISTRATION SLIP
             </div>
             <table class="data-table">
@@ -410,7 +410,7 @@ async def print_slip(
                     <td class="label">Attending Doctor:</td>
                     <td>Dr. {doctor.get("name", "N/A")} ({doctor.get("department", "N/A")})</td>
                     <td class="label">Serial Number:</td>
-                    <td style="font-weight: bold; font-size: 1.2em; color: #8B0000;">{visit.get("serial_number", "N/A")}</td>
+                    <td style="font-weight: bold; font-size: 1.2em; color: #2C3E50;">{visit.get("serial_number", "N/A")}</td>
                 </tr>
                 <tr>
                     <td class="label">Visit ID:</td>
@@ -446,7 +446,7 @@ async def print_slip(
             """
         body_html = f"""
         <div class="info-section">
-            <div style="font-weight: bold; font-size: 1.1em; color: #8B0000; border-bottom: 2px solid #8B0000; margin-bottom: 10px; padding-bottom: 5px;">
+            <div style="font-weight: bold; font-size: 1.1em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 10px; padding-bottom: 5px;">
                 INVESTIGATION RECEIPT
             </div>
             <table class="items-table">
@@ -463,7 +463,7 @@ async def print_slip(
                     {rows_html}
                     <tr class="total-row">
                         <td colspan="4" style="text-align: right; font-weight: bold;">Grand Total:</td>
-                        <td style="text-align: right; font-weight: bold; color: #8B0000; font-size: 1.1em;">₹ {total_amount:.2f}</td>
+                        <td style="text-align: right; font-weight: bold; color: #2C3E50; font-size: 1.1em;">₹ {total_amount:.2f}</td>
                     </tr>
                 </tbody>
             </table>
@@ -485,7 +485,7 @@ async def print_slip(
             """
         body_html = f"""
         <div class="info-section">
-            <div style="font-weight: bold; font-size: 1.1em; color: #8B0000; border-bottom: 2px solid #8B0000; margin-bottom: 10px; padding-bottom: 5px;">
+            <div style="font-weight: bold; font-size: 1.1em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 10px; padding-bottom: 5px;">
                 PROCEDURE RECEIPT
             </div>
             <table class="items-table">
@@ -502,7 +502,7 @@ async def print_slip(
                     {rows_html}
                     <tr class="total-row">
                         <td colspan="4" style="text-align: right; font-weight: bold;">Grand Total:</td>
-                        <td style="text-align: right; font-weight: bold; color: #8B0000; font-size: 1.1em;">₹ {total_amount:.2f}</td>
+                        <td style="text-align: right; font-weight: bold; color: #2C3E50; font-size: 1.1em;">₹ {total_amount:.2f}</td>
                     </tr>
                 </tbody>
             </table>
@@ -524,7 +524,7 @@ async def print_slip(
             """
         body_html = f"""
         <div class="info-section">
-            <div style="font-weight: bold; font-size: 1.1em; color: #8B0000; border-bottom: 2px solid #8B0000; margin-bottom: 10px; padding-bottom: 5px;">
+            <div style="font-weight: bold; font-size: 1.1em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 10px; padding-bottom: 5px;">
                 SERVICE CHARGES RECEIPT
             </div>
             <table class="items-table">
@@ -541,7 +541,7 @@ async def print_slip(
                     {rows_html}
                     <tr class="total-row">
                         <td colspan="4" style="text-align: right; font-weight: bold;">Grand Total:</td>
-                        <td style="text-align: right; font-weight: bold; color: #8B0000; font-size: 1.1em;">₹ {total_amount:.2f}</td>
+                        <td style="text-align: right; font-weight: bold; color: #2C3E50; font-size: 1.1em;">₹ {total_amount:.2f}</td>
                     </tr>
                 </tbody>
             </table>
@@ -564,7 +564,7 @@ async def print_slip(
             """
         body_html = f"""
         <div class="info-section">
-            <div style="font-weight: bold; font-size: 1.1em; color: #8B0000; border-bottom: 2px solid #8B0000; margin-bottom: 10px; padding-bottom: 5px;">
+            <div style="font-weight: bold; font-size: 1.1em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 10px; padding-bottom: 5px;">
                 OT BILL & RECEIPT
             </div>
             <div style="margin-bottom: 10px;"><strong>IPD ID:</strong> {ipd_id}</div>
@@ -582,7 +582,7 @@ async def print_slip(
                     {rows_html}
                     <tr class="total-row">
                         <td colspan="4" style="text-align: right; font-weight: bold;">Grand Total:</td>
-                        <td style="text-align: right; font-weight: bold; color: #8B0000; font-size: 1.1em;">₹ {total_amount:.2f}</td>
+                        <td style="text-align: right; font-weight: bold; color: #2C3E50; font-size: 1.1em;">₹ {total_amount:.2f}</td>
                     </tr>
                 </tbody>
             </table>
@@ -621,7 +621,7 @@ async def print_slip(
                 """
         
         charges_html += f"""
-        <tr style="background: #fdf2f2; font-weight: bold;">
+        <tr style="background: #f2f7fd; font-weight: bold;">
             <td>-</td>
             <td>File Charge (Admission Fee)</td>
             <td>1</td>
@@ -645,11 +645,11 @@ async def print_slip(
             
         body_html = f"""
         <div class="info-section">
-            <div style="font-weight: bold; font-size: 1.2em; color: #8B0000; border-bottom: 2px solid #8B0000; margin-bottom: 15px; padding-bottom: 5px; text-align: center;">
+            <div style="font-weight: bold; font-size: 1.2em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 15px; padding-bottom: 5px; text-align: center;">
                 DISCHARGE SUMMARY & FINAL BILL
             </div>
             
-            <h3 style="color: #8B0000; margin-bottom: 5px;">Admission Details</h3>
+            <h3 style="color: #2C3E50; margin-bottom: 5px;">Admission Details</h3>
             <table class="data-table" style="margin-bottom: 15px;">
                 <tr>
                     <td class="label">IPD ID:</td>
@@ -677,7 +677,7 @@ async def print_slip(
                 </tr>
             </table>
             
-            <h3 style="color: #8B0000; margin-bottom: 5px;">Detailed Billing Charges</h3>
+            <h3 style="color: #2C3E50; margin-bottom: 5px;">Detailed Billing Charges</h3>
             <table class="items-table" style="margin-bottom: 15px;">
                 <thead>
                     <tr>
@@ -693,7 +693,7 @@ async def print_slip(
                 </tbody>
             </table>
             
-            <h3 style="color: #8B0000; margin-bottom: 5px;">Transaction & Advances History</h3>
+            <h3 style="color: #2C3E50; margin-bottom: 5px;">Transaction & Advances History</h3>
             <table class="items-table" style="margin-bottom: 15px;">
                 <thead>
                     <tr>
@@ -727,7 +727,7 @@ async def print_slip(
                         <td style="padding: 5px; font-weight: bold;">Total Amount Paid:</td>
                         <td style="padding: 5px; text-align: right; font-weight: bold;">- ₹ {summary.get("total_paid", 0.0):.2f}</td>
                     </tr>
-                    <tr style="border-top: 2px double #8B0000; font-size: 1.1em; font-weight: bold; background: #fdf2f2; color: #8B0000;">
+                    <tr style="border-top: 2px double #1E88E5; font-size: 1.1em; font-weight: bold; background: #f2f7fd; color: #2C3E50;">
                         <td style="padding: 6px;">Balance Outstanding:</td>
                         <td style="padding: 6px; text-align: right;">₹ {summary.get("balance_due", 0.0):.2f}</td>
                     </tr>
@@ -759,7 +759,7 @@ async def print_slip(
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                border-bottom: 3px solid #8B0000;
+                border-bottom: 3px solid #1E88E5;
                 padding-bottom: 15px;
                 margin-bottom: 15px;
             }}
@@ -770,7 +770,7 @@ async def print_slip(
             .hospital-name {{
                 font-size: 20pt;
                 font-weight: bold;
-                color: #8B0000;
+                color: #2C3E50;
                 margin: 2px 0;
             }}
             .hospital-address {{
@@ -779,10 +779,10 @@ async def print_slip(
                 margin: 1px 0;
             }}
             .patient-box {{
-                border: 2px solid #8B0000;
+                border: 2px solid #1E88E5;
                 padding: 10px;
                 margin-bottom: 15px;
-                background: #fffcfc;
+                background: #f2f7fd;
                 border-radius: 4px;
             }}
             .patient-grid {{
@@ -826,8 +826,11 @@ async def print_slip(
                 background-color: #f5f5f5;
                 font-weight: bold;
             }}
+            .total-row {{
+                font-weight: bold;
+            }}
             .total-row td {{
-                border-top: 2px solid #8B0000;
+                border-top: 2px solid #1E88E5;
             }}
             .prescription-area {{
                 margin-top: 20px;
@@ -839,10 +842,10 @@ async def print_slip(
             .prescription-header {{
                 font-size: 11pt;
                 font-weight: bold;
-                color: #8B0000;
+                color: #2C3E50;
                 margin-bottom: 15px;
                 padding-bottom: 8px;
-                border-bottom: 1px solid #ddd;
+                border-bottom: 1px solid #1E88E5;
             }}
             .payment-bank-details {{
                 margin-top: 20px;
@@ -928,7 +931,7 @@ async def print_slip(
         <!-- WhatsApp & Print Banner (Hidden on print) -->
         <div class="no-print no-print-banner">
             <span style="font-weight: bold; color: #333; font-size: 10.5pt;">
-                <i class="fas fa-file-medical text-primary" style="margin-right: 6px;"></i>Print Preview - Tiwari Hospital
+                <i class="fas fa-file-medical text-primary" style="margin-right: 6px;"></i>Print Preview - Surya Hospital
             </span>
             <div>
                 <button onclick="window.print()" class="btn-print">
@@ -973,7 +976,7 @@ async def print_slip(
         
         <!-- Payment & Bank Options -->
         <div class="payment-bank-details">
-            <div style="font-weight: bold; color: #8B0000; border-bottom: 1px solid #ddd; margin-bottom: 8px; padding-bottom: 3px; font-size: 9.5pt;">
+            <div style="font-weight: bold; color: #2C3E50; border-bottom: 1px solid #1E88E5; margin-bottom: 8px; padding-bottom: 3px; font-size: 9.5pt;">
                 Payment Options & Bank Details
             </div>
             <div class="payment-grid">
@@ -982,13 +985,13 @@ async def print_slip(
                     Bank Name: State Bank of India<br>
                     Account Number: 12345678901<br>
                     IFSC Code: SBIN0001234<br>
-                    Account Holder Name: TIWARI HOSPITAL
+                    Account Holder Name: SURYA HOSPITAL
                 </div>
                 <div class="upi-details">
                     <strong>UPI/QR Payment:</strong><br>
-                    UPI ID: <span>tiwarihospital@okaxis</span><br>
+                    UPI ID: <span>suryahospital@okaxis</span><br>
                     <div style="margin-top: 5px; font-size: 8.5pt; color: #555;">
-                        * You can scan and pay using GPay, PhonePe, Paytm, or any UPI app. Please verify the name <strong>TIWARI HOSPITAL</strong> before paying.
+                        * You can scan and pay using GPay, PhonePe, Paytm, or any UPI app. Please verify the name <strong>SURYA HOSPITAL</strong> before paying.
                     </div>
                 </div>
             </div>
@@ -1005,7 +1008,7 @@ async def print_slip(
                 const cleanMobile = mobile.replace(/\\D/g, "");
                 const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
                 const currentUrl = window.location.href;
-                const text = encodeURIComponent("Hello, here is your medical slip from Tiwari Hospital: " + currentUrl);
+                const text = encodeURIComponent("Hello, here is your medical slip from Surya Hospital: " + currentUrl);
                 document.getElementById("whatsappShareBtn").href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
             }});
             

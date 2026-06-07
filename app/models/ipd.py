@@ -23,13 +23,13 @@ class IPD(Base):
     __tablename__ = "ipd"
     
     ipd_id = Column(String(20), primary_key=True)
-    patient_id = Column(String(20), ForeignKey("patients.patient_id"), nullable=False)
-    visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True)
+    patient_id = Column(String(20), ForeignKey("patients.patient_id"), nullable=False, index=True)
+    visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True, index=True)
     admission_date = Column(DateTime(timezone=True), nullable=False)
     discharge_date = Column(DateTime(timezone=True), nullable=True)
     file_charge = Column(Numeric(10, 2), nullable=False)
-    bed_id = Column(String(20), ForeignKey("beds.bed_id"), nullable=False)
-    attending_doctor_id = Column(String(20), ForeignKey("doctors.doctor_id"), nullable=True)
+    bed_id = Column(String(20), ForeignKey("beds.bed_id"), nullable=False, index=True)
+    attending_doctor_id = Column(String(20), ForeignKey("doctors.doctor_id"), nullable=True, index=True)
     referred_by = Column(String(100), nullable=True)
     diagnosis = Column(String(500), nullable=True)
     procedure_performed = Column(String(500), nullable=True)

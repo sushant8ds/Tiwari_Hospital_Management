@@ -32,9 +32,9 @@ class Slip(Base):
     __tablename__ = "slips"
     
     slip_id = Column(String(30), primary_key=True)
-    patient_id = Column(String(20), ForeignKey("patients.patient_id"), nullable=False)
-    visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True)
-    ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=True)
+    patient_id = Column(String(20), ForeignKey("patients.patient_id"), nullable=False, index=True)
+    visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True, index=True)
+    ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=True, index=True)
     slip_type = Column(Enum(SlipType), nullable=False)
     barcode_data = Column(String(100), nullable=False)
     barcode_image = Column(Text, nullable=True)  # Base64 encoded image

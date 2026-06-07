@@ -15,7 +15,7 @@ class OTProcedure(Base):
     __tablename__ = "ot_procedures"
     
     ot_id = Column(String(30), primary_key=True)
-    ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=False)
+    ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=False, index=True)
     operation_name = Column(String(200), nullable=False)
     operation_date = Column(DateTime(timezone=True), nullable=False)
     duration_minutes = Column(Integer, nullable=False)  # Duration in minutes

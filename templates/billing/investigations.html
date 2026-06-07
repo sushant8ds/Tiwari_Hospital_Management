@@ -618,9 +618,13 @@ document.getElementById('saveChargesBtn').addEventListener('click', async functi
         });
         
         // Save each type
+        const savedPrintableTypes = [];
         for (const [type, typeCharges] of Object.entries(chargesByType)) {
             if (typeCharges.length > 0) {
-                const endpoint = type.toLowerCase() + 's';
+                let endpoint = type.toLowerCase() + 's';
+                if (type === 'MANUAL') {
+                    endpoint = 'manual-charges';
+                }
                 const url = ipdId 
                     ? `/api/v1/billing/ipd/${ipdId}/${endpoint}`
                     : `/api/v1/billing/${visitId}/${endpoint}`;
@@ -634,6 +638,10 @@ document.getElementById('saveChargesBtn').addEventListener('click', async functi
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.detail || `Failed to save ${type} charges`);
+                }
+                
+                if (['INVESTIGATION', 'PROCEDURE', 'SERVICE'].includes(type)) {
+                    savedPrintableTypes.push(type);
                 }
             }
         }
@@ -666,7 +674,48 @@ document.getElementById('saveChargesBtn').addEventListener('click', async functi
         
         showToast('Charges saved and payment recorded successfully!', 'success');
         
+        // Auto-generate slips
+        const generatedSlips = [];
+        for (const type of savedPrintableTypes) {
+            try {
+                const slipTypeLower = type.toLowerCase();
+                const queryParams = new URLSearchParams();
+                if (ipdId) queryParams.append('ipd_id', ipdId);
+                else if (visitId) queryParams.append('visit_id', visitId);
+                
+                const slipResponse = await fetch(`/api/v1/slips/generate/${slipTypeLower}?${queryParams.toString()}`, {
+                    method: 'POST',
+                    headers: getHeaders()
+                });
+                
+                if (slipResponse.ok) {
+                    const slipData = await slipResponse.json();
+                    generatedSlips.push({
+                        type: type,
+                        id: slipData.slip_id
+                    });
+                } else {
+                    console.error(`Failed to generate ${type} slip`);
+                }
+            } catch (err) {
+                console.error(`Error generating ${type} slip:`, err);
+            }
+        }
+        
+        // Open print windows
+        if (generatedSlips.length > 0) {
+            generatedSlips.forEach(slip => {
+                const printWindow = window.open(`/print/${slip.id}`, '_blank');
+                if (!printWindow) {
+                    showToast(`Popup blocked! <a href="/print/${slip.id}" target="_blank" class="text-white text-decoration-underline fw-bold ms-2">Click here to print ${slip.type} slip</a>`, 'info');
+                } else {
+                    showToast(`${slip.type} slip print window opened.`, 'success');
+                }
+            });
+        }
+        
         // Reset and go back
+        const delay = generatedSlips.length > 0 ? 3000 : 1500;
         setTimeout(() => {
             charges = [];
             updateChargesTable();
@@ -674,7 +723,7 @@ document.getElementById('saveChargesBtn').addEventListener('click', async functi
             document.getElementById('step1-search').style.display = 'block';
             document.getElementById('patientSearch').value = '';
             document.getElementById('patientSearch').focus();
-        }, 1500);
+        }, delay);
         
     } catch (error) {
         console.error('Error saving charges:', error);

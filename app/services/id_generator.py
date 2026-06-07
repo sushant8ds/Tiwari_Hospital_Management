@@ -23,78 +23,112 @@ class IDGenerator:
             now = datetime.now()
             yymm = now.strftime("%y%b").upper()
             prefix = f"P-{yymm}-"
+            key = f"patient_{yymm}"
             
-            if db:
-                result = await db.execute(
-                    select(Patient.patient_id)
-                    .where(Patient.patient_id.like(f"{prefix}%"))
-                    .order_by(Patient.patient_id.desc())
-                    .limit(1)
-                )
-                last_id = result.scalar()
-                if last_id:
-                    try:
-                        last_seq = int(last_id.split("-")[-1])
-                        new_sequence = last_seq + 1
-                    except ValueError:
-                        new_sequence = 1
+            if key not in self._counters:
+                if db:
+                    result = await db.execute(
+                        select(Patient.patient_id)
+                        .where(Patient.patient_id.like(f"{prefix}%"))
+                        .order_by(Patient.patient_id.desc())
+                        .limit(1)
+                    )
+                    last_id = result.scalar()
+                    if last_id:
+                        try:
+                            last_seq = int(last_id.split("-")[-1])
+                            self._counters[key] = last_seq
+                        except ValueError:
+                            self._counters[key] = 0
+                    else:
+                        self._counters[key] = 0
                 else:
-                    new_sequence = 1
-            else:
-                key = f"patient_{yymm}"
-                if key not in self._counters:
                     self._counters[key] = 0
-                self._counters[key] += 1
-                new_sequence = self._counters[key]
-                
+                    
+            self._counters[key] += 1
+            new_sequence = self._counters[key]
             return f"{prefix}{new_sequence:04d}"
     
-    async def generate_visit_id(self) -> str:
+    async def generate_visit_id(self, db=None) -> str:
         """Generate unique visit ID: V + YYYYMMDD + HHMMSS + 3-digit counter.
         
         Format: VYYYYMMDDHHMMSSXXX (18 characters total)
-        Uses a per-second monotonic counter (0-999). When the counter wraps at 999,
-        subsequent calls within the same second will still be unique because the
-        counter keeps incrementing (capped to 3 digits via modulo on display only).
-        
-        For true uniqueness across instances, we use a global per-second counter.
         """
+        from sqlalchemy import select
+        from app.models.visit import Visit
+
         async with self._lock:
             now = datetime.now()
             date_str = now.strftime("%Y%m%d")
             time_str = now.strftime("%H%M%S")
+            prefix = f"V{date_str}{time_str}"
             second_key = f"visit_{date_str}{time_str}"
             
             if second_key not in self._counters:
-                # Reset counter for new second
-                self._counters[second_key] = 0
+                if db:
+                    result = await db.execute(
+                        select(Visit.visit_id)
+                        .where(Visit.visit_id.like(f"{prefix}%"))
+                        .order_by(Visit.visit_id.desc())
+                        .limit(1)
+                    )
+                    last_id = result.scalar()
+                    if last_id:
+                        try:
+                            last_seq_str = last_id[len(prefix):]
+                            self._counters[second_key] = int(last_seq_str)
+                        except (ValueError, IndexError):
+                            self._counters[second_key] = 0
+                    else:
+                        self._counters[second_key] = 0
+                else:
+                    self._counters[second_key] = 0
+                    
             self._counters[second_key] += 1
-            seq = self._counters[second_key]
+            new_sequence = self._counters[second_key]
             
-            # If we overflow 999 in same second, we need to advance time
-            # Use seq directly but keep it as 3 digits via cycling within second
-            # The format must be exactly 3 digits (000-999)
-            display_seq = (seq - 1) % 1000
-            return f"V{date_str}{time_str}{display_seq:03d}"
+            display_seq = (new_sequence - 1) % 1000
+            return f"{prefix}{display_seq:03d}"
     
-    async def generate_ipd_id(self) -> str:
+    async def generate_ipd_id(self, db=None) -> str:
         """Generate unique IPD ID: IPD + YYYYMMDD + 4-digit sequential counter.
         
         Format: IPDYYYYMMDDXXXX (15 characters total)
-        Counter increments sequentially per day, starting at 1.
         """
+        from sqlalchemy import select
+        from app.models.ipd import IPD
+
         async with self._lock:
             now = datetime.now()
             today = now.strftime("%Y%m%d")
+            prefix = f"IPD{today}"
             key = f"ipd_{today}"
             
             if key not in self._counters:
-                self._counters[key] = 0
+                if db:
+                    result = await db.execute(
+                        select(IPD.ipd_id)
+                        .where(IPD.ipd_id.like(f"{prefix}%"))
+                        .order_by(IPD.ipd_id.desc())
+                        .limit(1)
+                    )
+                    last_id = result.scalar()
+                    if last_id:
+                        try:
+                            last_seq_str = last_id[len(prefix):]
+                            self._counters[key] = int(last_seq_str)
+                        except (ValueError, IndexError):
+                            self._counters[key] = 0
+                    else:
+                        self._counters[key] = 0
+                else:
+                    self._counters[key] = 0
+                    
             self._counters[key] += 1
-            seq = self._counters[key]
-            # Keep within 4 digits (0001-9999)
-            display_seq = ((seq - 1) % 9999) + 1
-            return f"IPD{today}{display_seq:04d}"
+            new_sequence = self._counters[key]
+            
+            display_seq = ((new_sequence - 1) % 9999) + 1
+            return f"{prefix}{display_seq:04d}"
     
     async def generate_charge_id(self) -> str:
         """Generate unique charge ID: C + YYYYMMDD + HHMMSS + microsecond + random"""
@@ -106,19 +140,81 @@ class IDGenerator:
             rand = f"{random.randint(0, 999):03d}"
             return f"C{date_time}{micro}{rand}"
     
-    async def generate_user_id(self) -> str:
+    async def generate_user_id(self, db=None) -> str:
         """Generate unique user ID: U + YYYYMMDD + 3-digit sequence"""
+        from sqlalchemy import select
+        from app.models.user import User
+
         async with self._lock:
-            today = datetime.now().strftime("%Y%m%d")
+            now = datetime.now()
+            today = now.strftime("%Y%m%d")
+            prefix = f"U{today}"
             key = f"user_{today}"
             
             if key not in self._counters:
-                self._counters[key] = 0
-            
+                if db:
+                    result = await db.execute(
+                        select(User.user_id)
+                        .where(User.user_id.like(f"{prefix}%"))
+                        .order_by(User.user_id.desc())
+                        .limit(1)
+                    )
+                    last_id = result.scalar()
+                    if last_id:
+                        try:
+                            last_seq_str = last_id[len(prefix):]
+                            self._counters[key] = int(last_seq_str)
+                        except (ValueError, IndexError):
+                            self._counters[key] = 0
+                    else:
+                        self._counters[key] = 0
+                else:
+                    self._counters[key] = 0
+                    
             self._counters[key] += 1
-            sequence = str(self._counters[key]).zfill(3)
+            new_sequence = self._counters[key]
             
-            return f"U{today}{sequence}"
+            display_seq = ((new_sequence - 1) % 999) + 1
+            sequence = str(display_seq).zfill(3)
+            return f"{prefix}{sequence}"
+    
+    async def generate_doctor_id(self, db=None) -> str:
+        """Generate unique doctor ID: D + YYYYMMDD + 3-digit sequence"""
+        from sqlalchemy import select
+        from app.models.doctor import Doctor
+
+        async with self._lock:
+            now = datetime.now()
+            today = now.strftime("%Y%m%d")
+            prefix = f"D{today}"
+            key = f"doctor_{today}"
+            
+            if key not in self._counters:
+                if db:
+                    result = await db.execute(
+                        select(Doctor.doctor_id)
+                        .where(Doctor.doctor_id.like(f"{prefix}%"))
+                        .order_by(Doctor.doctor_id.desc())
+                        .limit(1)
+                    )
+                    last_id = result.scalar()
+                    if last_id:
+                        try:
+                            last_seq_str = last_id[len(prefix):]
+                            self._counters[key] = int(last_seq_str)
+                        except (ValueError, IndexError):
+                            self._counters[key] = 0
+                    else:
+                        self._counters[key] = 0
+                else:
+                    self._counters[key] = 0
+                    
+            self._counters[key] += 1
+            new_sequence = self._counters[key]
+            
+            display_seq = ((new_sequence - 1) % 999) + 1
+            sequence = str(display_seq).zfill(3)
+            return f"{prefix}{sequence}"
     
     async def generate_ot_id(self) -> str:
         """Generate unique OT ID: OT + YYYYMMDD + HHMMSS + microsecond + random"""
@@ -153,12 +249,12 @@ async def generate_patient_id(db=None) -> str:
 
 async def generate_visit_id(db=None) -> str:
     """Generate visit ID"""
-    return await id_generator.generate_visit_id()
+    return await id_generator.generate_visit_id(db)
 
 
 async def generate_ipd_id(db=None) -> str:
     """Generate IPD ID"""
-    return await id_generator.generate_ipd_id()
+    return await id_generator.generate_ipd_id(db)
 
 
 async def generate_charge_id(db=None) -> str:
@@ -168,7 +264,12 @@ async def generate_charge_id(db=None) -> str:
 
 async def generate_user_id(db=None) -> str:
     """Generate user ID"""
-    return await id_generator.generate_user_id()
+    return await id_generator.generate_user_id(db)
+
+
+async def generate_doctor_id(db=None) -> str:
+    """Generate doctor ID"""
+    return await id_generator.generate_doctor_id(db)
 
 
 async def generate_ot_id(db=None) -> str:

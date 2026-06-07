@@ -208,6 +208,12 @@ class TestRequiredFieldValidationProperty:
         
         **Validates: Requirements 1.2**
         """
+        from tests.conftest import truncate_all_tables
+        from app.services.id_generator import id_generator
+        await truncate_all_tables()
+        id_generator._counters.clear()
+        await db_session.rollback()
+
         # Check if mobile number already exists and skip if it does
         existing = await patient_crud.get_patient_by_mobile(db_session, patient_data["mobile_number"])
         assume(existing is None)  # Skip this test case if mobile already exists
@@ -248,6 +254,12 @@ class TestRequiredFieldValidationProperty:
         
         **Validates: Requirements 1.2**
         """
+        from tests.conftest import truncate_all_tables
+        from app.services.id_generator import id_generator
+        await truncate_all_tables()
+        id_generator._counters.clear()
+        await db_session.rollback()
+
         patient_data, invalid_field = invalid_data
         
         # Attempt to create patient with invalid data
@@ -280,6 +292,12 @@ class TestRequiredFieldValidationProperty:
         
         **Validates: Requirements 16.1**
         """
+        from tests.conftest import truncate_all_tables
+        from app.services.id_generator import id_generator
+        await truncate_all_tables()
+        id_generator._counters.clear()
+        await db_session.rollback()
+
         try:
             doctor = await doctor_crud.create_doctor(
                 db=db_session,
@@ -317,6 +335,12 @@ class TestRequiredFieldValidationProperty:
         
         **Validates: Requirements 16.1**
         """
+        from tests.conftest import truncate_all_tables
+        from app.services.id_generator import id_generator
+        await truncate_all_tables()
+        id_generator._counters.clear()
+        await db_session.rollback()
+
         doctor_data, invalid_field = invalid_data
         
         # Attempt to create doctor with invalid data
@@ -353,6 +377,12 @@ class TestRequiredFieldValidationProperty:
         
         **Validates: Requirements 1.2**
         """
+        from tests.conftest import truncate_all_tables
+        from app.services.id_generator import id_generator
+        await truncate_all_tables()
+        id_generator._counters.clear()
+        await db_session.rollback()
+
         created_patients = []
         
         # Generate a unique base number for this test run using timestamp
@@ -408,7 +438,10 @@ class TestRequiredFieldValidationProperty:
         
         **Validates: Requirements 16.1**
         """
-        # Reset session state between hypothesis examples
+        from tests.conftest import truncate_all_tables
+        from app.services.id_generator import id_generator
+        await truncate_all_tables()
+        id_generator._counters.clear()
         await db_session.rollback()
         
         created_doctors = []

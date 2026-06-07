@@ -312,6 +312,42 @@ async def add_ipd_service_charges(
         )
 
 
+@router.post("/ipd/{ipd_id}/manual-charges", response_model=List[BillingChargeResponse])
+async def add_ipd_manual_charges(
+    ipd_id: str,
+    manual_charges: List[ManualChargeRequest],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Add manual charges to an IPD admission"""
+    try:
+        # Convert to dict format for CRUD
+        manual_data = [
+            {
+                "name": charge.charge_name,
+                "rate": charge.rate,
+                "quantity": charge.quantity
+            }
+            for charge in manual_charges
+        ]
+        
+        charges = await billing_crud.add_manual_charges(
+            db=db,
+            visit_id=None,
+            ipd_id=ipd_id,
+            manual_charges=manual_data,
+            created_by=current_user.user_id
+        )
+        
+        return charges
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
 @router.get("/ipd/{ipd_id}/charges", response_model=List[BillingChargeResponse])
 async def get_ipd_charges(
     ipd_id: str,

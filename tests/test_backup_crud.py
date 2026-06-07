@@ -284,3 +284,138 @@ async def test_backup_includes_all_tables(db_session: AsyncSession):
     
     # Cleanup
     backup_file.unlink()
+
+
+@pytest.mark.asyncio
+async def test_restore_backup(db_session: AsyncSession):
+    """Test restoring a database backup"""
+    # Create test data
+    patient = await patient_crud.create_patient(
+        db=db_session,
+        name="Restore Patient",
+        age=45,
+        gender=Gender.FEMALE,
+        address="Restore Address",
+        mobile_number="9999999999"
+    )
+    
+    doctor = await doctor_crud.create_doctor(
+        db=db_session,
+        name="Dr. Restore",
+        department="Pediatrics",
+        new_patient_fee=Decimal("600.00"),
+        followup_fee=Decimal("400.00")
+    )
+    
+    # Create backup
+    backup_result = await backup_crud.create_backup(
+        db=db_session,
+        backup_name="test_restore_db"
+    )
+    
+    backup_file = Path(backup_result["backup_file"])
+    assert backup_file.exists()
+    
+    try:
+        # Clear data and restore
+        restore_result = await backup_crud.restore_backup(
+            db=db_session,
+            backup_name="test_restore_db",
+            clear_existing=True
+        )
+        
+        assert restore_result["restored"] is True
+        assert restore_result["record_counts"]["patients"] >= 1
+        
+        # Verify database has the restored patient and doctor
+        from sqlalchemy import select
+        from app.models.patient import Patient
+        from app.models.doctor import Doctor
+        
+        patient_res = await db_session.execute(
+            select(Patient).where(Patient.patient_id == patient.patient_id)
+        )
+        restored_patient = patient_res.scalar()
+        assert restored_patient is not None
+        assert restored_patient.name == "Restore Patient"
+        
+        doctor_res = await db_session.execute(
+            select(Doctor).where(Doctor.doctor_id == doctor.doctor_id)
+        )
+        restored_doctor = doctor_res.scalar()
+        assert restored_doctor is not None
+        assert restored_doctor.name == "Dr. Restore"
+        
+    finally:
+        # Cleanup
+        if backup_file.exists():
+            backup_file.unlink()
+
+
+@pytest.mark.asyncio
+async def test_restore_legacy_backup(db_session: AsyncSession):
+    """Test restoring a legacy backup (older version without user credentials or salary_payments)"""
+    backup_name = "test_legacy_backup"
+    backup_file = Path("backups") / f"{backup_name}.json"
+    
+    # Construct a legacy backup JSON
+    legacy_data = {
+        "backup_metadata": {
+            "backup_name": backup_name,
+            "backup_date": "2026-06-01T00:00:00",
+            "version": "0.9"
+        },
+        "patients": [],
+        "doctors": [],
+        "visits": [],
+        "ipd": [],
+        "beds": [],
+        "billing_charges": [],
+        "payments": [],
+        "employees": [],
+        "audit_logs": [],
+        "ot_procedures": [],
+        "slips": [],
+        "users": [
+            {
+                "user_id": "U20260601001",
+                "username": "legacy_admin",
+                "role": "ADMIN",
+                "is_active": True,
+                "created_date": "2026-06-01T00:00:00"
+            }
+        ]
+    }
+    
+    # Write to file
+    with open(backup_file, 'w') as f:
+        json.dump(legacy_data, f)
+        
+    try:
+        # Restore legacy backup
+        restore_result = await backup_crud.restore_backup(
+            db=db_session,
+            backup_name=backup_name,
+            clear_existing=True
+        )
+        
+        assert restore_result["restored"] is True
+        
+        # Verify the user is restored and has fallback values populated
+        from sqlalchemy import select
+        from app.models.user import User
+        
+        res = await db_session.execute(
+            select(User).where(User.user_id == "U20260601001")
+        )
+        restored_user = res.scalar()
+        assert restored_user is not None
+        assert restored_user.username == "legacy_admin"
+        assert restored_user.email == "legacy_admin@example.com"
+        assert restored_user.full_name == "Legacy_admin"
+        assert restored_user.hashed_password is not None
+        
+    finally:
+        # Cleanup
+        if backup_file.exists():
+            backup_file.unlink()

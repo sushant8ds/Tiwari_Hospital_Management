@@ -2,6 +2,7 @@
 Application configuration settings
 """
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from typing import Optional
 import os
@@ -46,6 +47,12 @@ class Settings(BaseSettings):
     THERMAL_PRINTER_WIDTH: int = 58
     A4_PRINTER_NAME: str = "default"
     
+    @model_validator(mode="after")
+    def check_secret_key_in_production(self) -> "Settings":
+        if self.ENVIRONMENT.lower() == "production" and self.SECRET_KEY == "your-secret-key-change-in-production":
+            raise ValueError("SECRET_KEY must be changed from the default value in a production environment.")
+        return self
+
     class Config:
         env_file = ".env"
         case_sensitive = True

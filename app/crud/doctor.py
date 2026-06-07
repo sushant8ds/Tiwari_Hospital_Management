@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.models.doctor import Doctor, DoctorStatus
-from app.services.id_generator import generate_user_id  # Reuse for doctor IDs
+from app.services.id_generator import generate_doctor_id
 from app.utils.validators import sanitize_string
 
 
@@ -40,9 +40,8 @@ class DoctorCRUD:
             raise ValueError("Follow-up fee cannot be negative")
         
         try:
-            # Generate doctor ID using similar pattern as user ID
-            doctor_id = await generate_user_id(db)
-            doctor_id = doctor_id.replace("U", "D")  # Replace U with D for doctor
+            # Generate doctor ID using dedicated doctor ID generator
+            doctor_id = await generate_doctor_id(db)
             
             doctor = Doctor(
                 doctor_id=doctor_id,

@@ -26,8 +26,8 @@ class BillingCharge(Base):
     __tablename__ = "billing_charges"
     
     charge_id = Column(String(30), primary_key=True)
-    visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True)
-    ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=True)
+    visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True, index=True)
+    ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=True, index=True)
     charge_type = Column(Enum(ChargeType), nullable=False)
     charge_name = Column(String(100), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)

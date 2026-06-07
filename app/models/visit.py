@@ -37,9 +37,9 @@ class Visit(Base):
     __tablename__ = "visits"
     
     visit_id = Column(String(30), primary_key=True)
-    patient_id = Column(String(20), ForeignKey("patients.patient_id"), nullable=False)
+    patient_id = Column(String(20), ForeignKey("patients.patient_id"), nullable=False, index=True)
     visit_type = Column(Enum(VisitType), nullable=False)
-    doctor_id = Column(String(20), ForeignKey("doctors.doctor_id"), nullable=False)
+    doctor_id = Column(String(20), ForeignKey("doctors.doctor_id"), nullable=False, index=True)
     department = Column(String(50), nullable=False)
     serial_number = Column(Integer, nullable=False)
     visit_date = Column(Date, nullable=False)

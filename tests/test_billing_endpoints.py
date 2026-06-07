@@ -415,3 +415,66 @@ async def test_add_charges_with_zero_quantity(async_client, db_session, auth_hea
     )
     
     assert response.status_code == 422  # Validation error
+
+
+@pytest.mark.asyncio
+async def test_add_ipd_manual_charges_endpoint(async_client, db_session, auth_headers):
+    """Test adding manual charges to an IPD admission via endpoint"""
+    from app.crud.ipd import ipd_crud, bed_crud
+    from app.models.bed import WardType
+    import uuid
+    
+    # Create patient
+    patient = await patient_crud.create_patient(
+        db=db_session,
+        name="Test IPD Patient",
+        age=45,
+        gender=Gender.FEMALE,
+        address="456 Test Ave",
+        mobile_number="9876543299"
+    )
+    
+    # Create bed
+    bed = await bed_crud.create_bed(
+        db=db_session,
+        bed_number=f"BED-{uuid.uuid4().hex[:8]}",
+        ward_type=WardType.GENERAL,
+        per_day_charge=Decimal("500.00")
+    )
+    
+    # Admit to IPD
+    ipd = await ipd_crud.admit_patient(
+        db=db_session,
+        patient_id=patient.patient_id,
+        bed_id=bed.bed_id,
+        file_charge=Decimal("1000.00")
+    )
+    
+    # Add manual charges
+    manual_data = [
+        {
+            "charge_name": "Nebulization",
+            "rate": 150.00,
+            "quantity": 3
+        },
+        {
+            "charge_name": "Surgical Consumables",
+            "rate": 450.00,
+            "quantity": 1
+        }
+    ]
+    
+    response = await async_client.post(
+        f"/api/v1/billing/ipd/{ipd.ipd_id}/manual-charges",
+        json=manual_data,
+        headers=auth_headers
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["charge_name"] == "Nebulization"
+    assert data[0]["quantity"] == 3
+    assert float(data[0]["total_amount"]) == 450.00
+    assert data[1]["charge_name"] == "Surgical Consumables"
+    assert float(data[1]["total_amount"]) == 450.00

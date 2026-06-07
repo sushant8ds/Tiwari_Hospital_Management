@@ -22,7 +22,7 @@ class SalaryPayment(Base):
     __tablename__ = "salary_payments"
     
     payment_id = Column(String(20), primary_key=True)
-    employee_id = Column(String(20), ForeignKey("employees.employee_id"), nullable=False)
+    employee_id = Column(String(20), ForeignKey("employees.employee_id"), nullable=False, index=True)
     month = Column(Integer, nullable=False)  # 1-12
     year = Column(Integer, nullable=False)
     amount = Column(Numeric(10, 2), nullable=False)
