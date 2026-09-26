@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Visit Bill - {{ patient.name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            font-size: 11pt;
+        }
+        .header-section {
+            display: flex;
+            align-items: flex-start;
+            border-bottom: 3px solid #1E88E5;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .doctor-info {
+            flex: 0 0 35%;
+            padding-right: 15px;
+        }
+        .doctor-name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .doctor-details {
+            font-size: 8pt;
+            color: #333;
+            line-height: 1.3;
+            margin: 2px 0;
+        }
+        .hospital-info {
+            flex: 0 0 65%;
+            text-align: center;
+        }
+        .logo-container {
+            margin-bottom: 8px;
+        }
+        .logo-container img {
+            max-width: 70px;
+            max-height: 50px;
+        }
+        .hospital-name {
+            font-size: 22pt;
+            font-weight: bold;
+            color: #2C3E50;
+            margin: 5px 0;
+        }
+        .hospital-address {
+            font-size: 9pt;
+            color: #666;
+            line-height: 1.2;
+        }
+        .patient-box {
+            border: 2px solid #000;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+        }
+        .patient-row {
+            margin: 6px 0;
+            font-size: 10pt;
+        }
+        .label {
+            font-weight: bold;
+            color: #333;
+        }
+        .bill-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .bill-table th, .bill-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            font-size: 10pt;
+        }
+        .bill-table th {
+            background-color: #1E88E5;
+            color: white;
+            text-align: left;
+        }
+        .bill-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #e3f2fd !important;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 8px;
+        }
+        .no-print-banner {
+            background: #e9ecef;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #ced4da;
+        }
+        .btn-print {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 9.5pt;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 9.5pt;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        @media print {
+            body {
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="no-print no-print-banner">
+        <span style="font-weight: bold; color: #333; font-size: 10.5pt;">
+            <i class="fas fa-receipt text-primary" style="margin-right: 6px;"></i>Invoice - {{ hospital_name }}
+        </span>
+        <div>
+            <button onclick="window.print()" class="btn-print">
+                <i class="fas fa-print" style="margin-right: 6px;"></i> Print Bill
+            </button>
+            <a id="whatsappShareBtn" href="#" target="_blank" class="btn-whatsapp">
+                <i class="fab fa-whatsapp" style="margin-right: 6px; font-size: 1.1em;"></i> Share via WhatsApp
+            </a>
+        </div>
+    </div>
+    
+    <div class="header-section">
+        <div class="doctor-info">
+            <div class="doctor-name">{{ doctor.name }}</div>
+            <div class="doctor-details">M.B.B.S., {{ doctor.department }}</div>
+            <div class="doctor-details">Phone: {{ hospital_phone }}</div>
+        </div>
+        
+        <div class="hospital-info">
+            <div class="logo-container">
+                <img src="/static/images/hospital_logo.png" alt="Hospital Logo" onerror="this.style.display='none'">
+            </div>
+            <div class="hospital-name">{{ hospital_name.upper() }}</div>
+            <div class="hospital-address">{{ hospital_address }}</div>
+            <div class="hospital-address">Phone: {{ hospital_phone }}</div>
+        </div>
+    </div>
+    
+    <div class="patient-box">
+        <div class="patient-row">
+            <span class="label">Patient Name:</span> {{ patient.name }}
+            <span style="float: right;"><span class="label">Age/Sex:</span> {{ patient.age }}/{{ patient.gender.value if patient.gender.value is defined else patient.gender }}</span>
+        </div>
+        <div class="patient-row">
+            <span class="label">Address:</span> {{ patient.address or 'N/A' }}
+        </div>
+        <div class="patient-row">
+            <span class="label">Mobile:</span> {{ patient.mobile_number }}
+            <span style="float: right;"><span class="label">Date:</span> {{ visit_date }}</span>
+        </div>
+        <div class="patient-row">
+            <span class="label">Patient ID:</span> {{ patient.patient_id }}
+            <span style="float: right;"><span class="label">Visit ID:</span> {{ visit.visit_id }}</span>
+        </div>
+    </div>
+    
+    <div style="text-align: center; font-weight: bold; font-size: 13pt; margin: 15px 0 10px 0; color: #2C3E50; border-bottom: 2px solid #1E88E5; padding-bottom: 5px;">
+        OPD VISIT RECEIPT & BILL
+    </div>
+    
+    <table class="bill-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">#</th>
+                <th style="width: 45%;">Service / Item Description</th>
+                <th style="width: 20%;">Category</th>
+                <th style="width: 10%;">Qty</th>
+                <th style="width: 10%;">Rate</th>
+                <th style="width: 10%; text-align: right;">Amount (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>OPD Consultation Fee ({{ visit.visit_type.value if visit.visit_type.value is defined else visit.visit_type }})</td>
+                <td>OPD Fee</td>
+                <td>1</td>
+                <td>₹{{ "%.2f"|format(visit.opd_fee|float) }}</td>
+                <td style="text-align: right;">₹{{ "%.2f"|format(visit.opd_fee|float) }}</td>
+            </tr>
+            {% for charge in charges %}
+            <tr>
+                <td>{{ loop.index + 1 }}</td>
+                <td>{{ charge.charge_name }}</td>
+                <td>{{ charge.charge_type.value if charge.charge_type.value is defined else charge.charge_type }}</td>
+                <td>{{ charge.quantity }}</td>
+                <td>₹{{ "%.2f"|format(charge.rate|float) }}</td>
+                <td style="text-align: right;">₹{{ "%.2f"|format(charge.total_amount|float) }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td colspan="5" style="text-align: right; font-weight: bold;">Grand Total:</td>
+                <td style="text-align: right; font-weight: bold;">₹{{ "%.2f"|format(total_amount|float) }}</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        <p>{{ hospital_address }} | Phone: {{ hospital_phone }}</p>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const mobile = "{{ patient.mobile_number }}";
+            const cleanMobile = mobile.replace(/\D/g, "");
+            const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
+            const currentUrl = window.location.href;
+            const text = encodeURIComponent("Hello, here is your Visit Bill from {{ hospital_name }}: " + currentUrl);
+            const shareBtn = document.getElementById("whatsappShareBtn");
+            if (shareBtn) {
+                shareBtn.href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
+            }
+        });
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>

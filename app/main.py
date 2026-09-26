@@ -3,14 +3,18 @@ Hospital OPD-IPD Management System
 Main FastAPI application entry point
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import AsyncSession
+import time
+import uuid
 
 from app.core.config import settings
-from app.core.database import engine
+from app.core.database import engine, get_db
+from app.core.templates import templates
+from app.core.logging import setup_logging, logger
 from app.models import Base
 from app.api.v1.api import api_router
 
@@ -18,8 +22,8 @@ from app.api.v1.api import api_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
-    # Startup
-    print("Starting Hospital Management System...")
+    setup_logging()
+    logger.info("Starting Hospital Management System...")
     
     # Create database tables
     async with engine.begin() as conn:
@@ -31,7 +35,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    print("Shutting down Hospital Management System...")
+    logger.info("Shutting down Hospital Management System...")
 
 
 async def seed_initial_data():
@@ -175,23 +179,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def add_process_time_and_request_id(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    request.state.request_id = request_id
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    process_time = (time.perf_counter() - start_time) * 1000
+    response.headers["X-Request-ID"] = request_id
+    response.headers["X-Process-Time-Ms"] = f"{process_time:.2f}"
+    return response
+
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include API routes
 app.include_router(api_router, prefix="/api/v1")
 
-# Templates
-templates = Jinja2Templates(directory="templates")
-
 
 @app.get("/")
 async def root(request: Request):
     """Root endpoint - redirect to dashboard"""
     return templates.TemplateResponse(
-        "index.html", 
-        {
-            "request": request,
+        request=request,
+        name="index.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -203,9 +217,9 @@ async def root(request: Request):
 async def login_page(request: Request):
     """User login page"""
     return templates.TemplateResponse(
-        "auth/login.html",
-        {
-            "request": request,
+        request=request,
+        name="auth/login.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -217,9 +231,9 @@ async def login_page(request: Request):
 async def ipd_dashboard_page(request: Request):
     """IPD Live Status Dashboard"""
     return templates.TemplateResponse(
-        "ipd/dashboard.html",
-        {
-            "request": request,
+        request=request,
+        name="ipd/dashboard.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -238,9 +252,9 @@ async def print_slip_page(request: Request, slip_id: str):
 async def patient_registration_page(request: Request):
     """Patient registration page"""
     return templates.TemplateResponse(
-        "patients/register.html",
-        {
-            "request": request,
+        request=request,
+        name="patients/register.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -252,9 +266,9 @@ async def patient_registration_page(request: Request):
 async def patient_details_page(request: Request, patient_id: str):
     """Patient details page"""
     return templates.TemplateResponse(
-        "patients/details.html",
-        {
-            "request": request,
+        request=request,
+        name="patients/details.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE,
@@ -267,9 +281,9 @@ async def patient_details_page(request: Request, patient_id: str):
 async def opd_new_page(request: Request):
     """New OPD registration page"""
     return templates.TemplateResponse(
-        "opd/new.html",
-        {
-            "request": request,
+        request=request,
+        name="opd/new.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -281,9 +295,9 @@ async def opd_new_page(request: Request):
 async def opd_followup_page(request: Request):
     """OPD follow-up registration page"""
     return templates.TemplateResponse(
-        "opd/followup.html",
-        {
-            "request": request,
+        request=request,
+        name="opd/followup.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -295,9 +309,9 @@ async def opd_followup_page(request: Request):
 async def opd_search_page(request: Request):
     """Patient search page"""
     return templates.TemplateResponse(
-        "opd/search.html",
-        {
-            "request": request,
+        request=request,
+        name="opd/search.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -309,9 +323,9 @@ async def opd_search_page(request: Request):
 async def ipd_admit_page(request: Request):
     """IPD admission page"""
     return templates.TemplateResponse(
-        "ipd/admit.html",
-        {
-            "request": request,
+        request=request,
+        name="ipd/admit.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -323,9 +337,9 @@ async def ipd_admit_page(request: Request):
 async def billing_investigations_page(request: Request):
     """Billing investigations page"""
     return templates.TemplateResponse(
-        "billing/investigations.html",
-        {
-            "request": request,
+        request=request,
+        name="billing/investigations.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -337,9 +351,9 @@ async def billing_investigations_page(request: Request):
 async def reports_daily_page(request: Request):
     """Daily reports page"""
     return templates.TemplateResponse(
-        "reports/daily.html",
-        {
-            "request": request,
+        request=request,
+        name="reports/daily.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -351,9 +365,9 @@ async def reports_daily_page(request: Request):
 async def owner_dashboard_page(request: Request):
     """Owner dashboard page (Admin only)"""
     return templates.TemplateResponse(
-        "owner/dashboard.html",
-        {
-            "request": request,
+        request=request,
+        name="owner/dashboard.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -365,9 +379,9 @@ async def owner_dashboard_page(request: Request):
 async def owner_employees_page(request: Request):
     """Owner employees management page (Admin only)"""
     return templates.TemplateResponse(
-        "owner/employees.html",
-        {
-            "request": request,
+        request=request,
+        name="owner/employees.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -379,9 +393,9 @@ async def owner_employees_page(request: Request):
 async def owner_salaries_page(request: Request):
     """Owner salary management page (Admin only)"""
     return templates.TemplateResponse(
-        "owner/salaries.html",
-        {
-            "request": request,
+        request=request,
+        name="owner/salaries.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -393,9 +407,9 @@ async def owner_salaries_page(request: Request):
 async def owner_doctors_page(request: Request):
     """Owner doctors management page (Admin only)"""
     return templates.TemplateResponse(
-        "owner/doctors.html",
-        {
-            "request": request,
+        request=request,
+        name="owner/doctors.html",
+        context={
             "hospital_name": settings.HOSPITAL_NAME,
             "hospital_address": settings.HOSPITAL_ADDRESS,
             "hospital_phone": settings.HOSPITAL_PHONE
@@ -404,13 +418,30 @@ async def owner_doctors_page(request: Request):
 
 
 @app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "Hospital Management System",
-        "version": "1.0.0"
-    }
+async def health_check(db: AsyncSession = Depends(get_db)):
+    """Health check endpoint with active database probe"""
+    from sqlalchemy import text
+    from fastapi.responses import JSONResponse
+    
+    db_status = "healthy"
+    try:
+        await db.execute(text("SELECT 1"))
+    except Exception as e:
+        logger.error(f"Health check database probe failed: {str(e)}")
+        db_status = "unhealthy"
+        
+    is_healthy = db_status == "healthy"
+    status_code = 200 if is_healthy else 503
+    
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "healthy" if is_healthy else "degraded",
+            "database": db_status,
+            "service": "Hospital Management System",
+            "version": "1.0.0"
+        }
+    )
 
 
 if __name__ == "__main__":

@@ -140,6 +140,18 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Quick Select CT Scan & Investigation Chips -->
+                    <div class="mt-3 pt-2 border-top d-flex flex-wrap align-items-center gap-1">
+                        <small class="text-muted fw-bold me-2"><i class="fas fa-bolt text-warning me-1"></i>Quick CT Scan & Tests:</small>
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" onclick="setQuickCharge('INVESTIGATION', 'Ncct head', 2100)">NCCT Head (₹2100)</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" onclick="setQuickCharge('INVESTIGATION', 'Cect abdomen', 5500)">CECT Abdomen (₹5500)</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" onclick="setQuickCharge('INVESTIGATION', 'Hrct thorax', 5500)">HRCT Thorax (₹5500)</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" onclick="setQuickCharge('INVESTIGATION', 'Ct bone', 3500)">CT Bone (₹3500)</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" onclick="setQuickCharge('INVESTIGATION', '3d charge', 500)">3D Charge (₹500)</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="setQuickCharge('INVESTIGATION', 'X-Ray', 400)">X-Ray (₹400)</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="setQuickCharge('INVESTIGATION', 'ECG', 200)">ECG (₹200)</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -412,6 +424,11 @@ document.getElementById('backBtn').addEventListener('click', function() {
 
 const predefinedData = {
     INVESTIGATION: [
+        { name: "Ncct head", rate: 2100.00 },
+        { name: "Cect abdomen", rate: 5500.00 },
+        { name: "Hrct thorax", rate: 5500.00 },
+        { name: "Ct bone", rate: 3500.00 },
+        { name: "3d charge", rate: 500.00 },
         { name: "X-Ray", rate: 400.00 },
         { name: "ECG", rate: 200.00 },
         { name: "Hb", rate: 50.00 },
@@ -491,6 +508,23 @@ document.getElementById('predefinedItem').addEventListener('change', function() 
         rateInput.value = '';
     }
 });
+
+// Quick charge select helper
+window.setQuickCharge = function(type, name, rate) {
+    const chargeTypeSelect = document.getElementById('chargeType');
+    const nameInput = document.getElementById('chargeName');
+    const rateInput = document.getElementById('rate');
+    const qtyInput = document.getElementById('quantity');
+    const predefinedContainer = document.getElementById('predefinedItemContainer');
+    
+    chargeTypeSelect.value = type;
+    nameInput.value = name;
+    rateInput.value = rate;
+    qtyInput.value = 1;
+    if (predefinedContainer) {
+        predefinedContainer.style.display = 'none';
+    }
+};
 
 // Add charge to list
 document.getElementById('chargeForm').addEventListener('submit', function(e) {

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ slip_type }} Slip - {{ patient.get('name', 'Patient') }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            font-size: 10pt;
+            color: #333;
+        }
+        .header-section {
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid #1E88E5;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+        .hospital-info {
+            flex: 1;
+            text-align: center;
+        }
+        .hospital-name {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #2C3E50;
+            margin: 0;
+        }
+        .hospital-address {
+            font-size: 9pt;
+            color: #666;
+            line-height: 1.2;
+        }
+        .patient-box {
+            border: 1.5px solid #2C3E50;
+            padding: 10px 14px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .patient-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            row-gap: 6px;
+            column-gap: 20px;
+            font-size: 9.5pt;
+        }
+        .label {
+            font-weight: bold;
+            color: #2C3E50;
+        }
+        .info-section {
+            margin-bottom: 15px;
+        }
+        .data-table, .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        .data-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .items-table th, .items-table td {
+            border: 1px solid #dee2e6;
+            padding: 7px 10px;
+            font-size: 9.5pt;
+        }
+        .items-table th {
+            background-color: #1E88E5;
+            color: white;
+            text-align: left;
+        }
+        .items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .prescription-area {
+            margin-top: 15px;
+            min-height: 450px;
+            border: 1px dashed #ccc;
+            padding: 15px;
+            background: white;
+        }
+        .prescription-header {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #1E88E5;
+        }
+        .payment-bank-details {
+            margin-top: 15px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 15px;
+            font-size: 8.5pt;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 6px;
+        }
+        .no-print-banner {
+            background: #e9ecef;
+            padding: 10px 16px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #ced4da;
+        }
+        .btn-print {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 8px;
+            font-size: 9pt;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 9pt;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none !important; }
+            .prescription-area { border: none; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="no-print no-print-banner">
+        <span style="font-weight: bold; color: #333; font-size: 10pt;">
+            <i class="fas fa-file-medical text-primary" style="margin-right: 6px;"></i>Print Preview - {{ hospital_name }}
+        </span>
+        <div>
+            <button onclick="window.print()" class="btn-print">
+                <i class="fas fa-print" style="margin-right: 6px;"></i> Print Slip
+            </button>
+            <a id="whatsappShareBtn" href="#" target="_blank" class="btn-whatsapp">
+                <i class="fab fa-whatsapp" style="margin-right: 6px; font-size: 1.1em;"></i> Share via WhatsApp
+            </a>
+        </div>
+    </div>
+    
+    <div class="header-section">
+        <div style="flex: 0 0 70px;">
+            <img src="/static/images/hospital_logo.png" alt="Logo" style="max-height: 55px; max-width: 55px;" onerror="this.style.display='none'">
+        </div>
+        <div class="hospital-info">
+            <div class="hospital-name">{{ hospital_name.upper() }}</div>
+            <div class="hospital-address">{{ hospital_address }}</div>
+            <div class="hospital-address">Phone: {{ hospital_phone }}</div>
+        </div>
+        <div style="flex: 0 0 130px; text-align: right; font-size: 8pt; color: #555;">
+            <strong>Slip ID:</strong> {{ slip.slip_id }}<br>
+            <strong>Date:</strong> {{ formatted_date }}
+        </div>
+    </div>
+    
+    <div class="patient-box">
+        <div class="patient-grid">
+            <div class="patient-row"><span class="label">Patient Name:</span> {{ patient.get("name", "N/A") }}</div>
+            <div class="patient-row"><span class="label">Age / Gender:</span> {{ patient.get("age", "N/A") }} / {{ patient.get("gender", "N/A") }}</div>
+            <div class="patient-row"><span class="label">Patient ID:</span> {{ patient.get("id", "N/A") }}</div>
+            <div class="patient-row"><span class="label">Mobile:</span> {{ patient.get("mobile", "N/A") }}</div>
+            <div class="patient-row" style="grid-column: span 2;"><span class="label">Address:</span> {{ patient.get("address", "N/A") }}</div>
+        </div>
+    </div>
+    
+    {% if slip_type == "OPD" %}
+        {% set visit = content.get("visit", {}) %}
+        {% set doctor = content.get("doctor", {}) %}
+        {% set charges = content.get("charges", {}) %}
+        <div class="info-section">
+            <div style="font-weight: bold; font-size: 1.1em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 10px; padding-bottom: 5px;">
+                OPD REGISTRATION SLIP
+            </div>
+            <table class="data-table">
+                <tr>
+                    <td class="label">Attending Doctor:</td>
+                    <td>Dr. {{ doctor.get("name", "N/A") }} ({{ doctor.get("department", "N/A") }})</td>
+                    <td class="label">Serial Number:</td>
+                    <td style="font-weight: bold; font-size: 1.2em; color: #2C3E50;">{{ visit.get("serial_number", "N/A") }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Visit ID:</td>
+                    <td>{{ visit.get("id", "N/A") }}</td>
+                    <td class="label">Visit Type:</td>
+                    <td>{{ visit.get("type", "N/A") }}</td>
+                </tr>
+                <tr>
+                    <td class="label">OPD Fee:</td>
+                    <td style="font-weight: bold;">₹ {{ "%.2f"|format(charges.get("opd_fee", 0.0)|float) }}</td>
+                    <td class="label">Payment Mode:</td>
+                    <td>{{ charges.get("payment_mode", "CASH") }}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="prescription-area">
+            <div class="prescription-header">Rx (Prescription)</div>
+        </div>
+    {% elif slip_type == "INVESTIGATION" or slip_type == "PROCEDURE" or slip_type == "SERVICE" or slip_type == "OT" %}
+        <div class="info-section">
+            <div style="font-weight: bold; font-size: 1.1em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 10px; padding-bottom: 5px;">
+                {{ slip_type }} RECEIPT
+            </div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">S.No.</th>
+                        <th>Description / Service</th>
+                        <th style="width: 80px; text-align: center;">Qty</th>
+                        <th style="width: 100px; text-align: right;">Rate</th>
+                        <th style="width: 110px; text-align: right;">Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set items = content.get("investigations") or content.get("procedures") or content.get("services") or content.get("charges", []) %}
+                    {% if items is iterable and items is not string and items is not mapping %}
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.get("name", "N/A") }}</td>
+                            <td style="text-align: center;">{{ item.get("quantity", 1) }}</td>
+                            <td style="text-align: right;">₹ {{ "%.2f"|format(item.get("rate", 0.0)|float) }}</td>
+                            <td style="text-align: right; font-weight: bold;">₹ {{ "%.2f"|format(item.get("total", 0.0)|float) }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                    <tr style="background-color: #e3f2fd; font-weight: bold;">
+                        <td colspan="4" style="text-align: right;">Grand Total:</td>
+                        <td style="text-align: right;">₹ {{ "%.2f"|format(content.get("total_amount", 0.0)|float) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {% elif slip_type == "DISCHARGE" %}
+        {% set ipd = content.get("ipd", {}) %}
+        {% set billing = content.get("billing", {}) %}
+        <div class="info-section">
+            <div style="font-weight: bold; font-size: 1.1em; color: #2C3E50; border-bottom: 2px solid #1E88E5; margin-bottom: 10px; padding-bottom: 5px;">
+                DISCHARGE SUMMARY & BILL
+            </div>
+            <table class="data-table">
+                <tr>
+                    <td class="label">IPD ID:</td>
+                    <td>{{ ipd.get("ipd_id", "N/A") }}</td>
+                    <td class="label">Ward / Bed:</td>
+                    <td>{{ ipd.get("ward_type", "N/A") }} - {{ ipd.get("bed_number", "N/A") }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Admission Date:</td>
+                    <td>{{ ipd.get("admission_date", "N/A") }}</td>
+                    <td class="label">Discharge Date:</td>
+                    <td>{{ ipd.get("discharge_date", "N/A") }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Total Charges:</td>
+                    <td style="font-weight: bold;">₹ {{ "%.2f"|format(billing.get("total_charges", 0.0)|float) }}</td>
+                    <td class="label">Net Payable:</td>
+                    <td style="font-weight: bold; color: #d32f2f;">₹ {{ "%.2f"|format(billing.get("net_amount", 0.0)|float) }}</td>
+                </tr>
+            </table>
+        </div>
+    {% endif %}
+    
+    <div class="payment-bank-details">
+        <div style="font-weight: bold; color: #2C3E50; border-bottom: 1px solid #1E88E5; margin-bottom: 6px; padding-bottom: 2px; font-size: 9pt;">
+            Payment Options & Bank Details
+        </div>
+        <div class="payment-grid">
+            <div>
+                <strong>Bank Transfer:</strong> State Bank of India | <strong>Account Holder:</strong> {{ hospital_name }}
+            </div>
+            <div>
+                <strong>UPI:</strong> <span>suryahospital@okaxis</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>{{ hospital_address }} | Phone: {{ hospital_phone }} | (Not For Medico Legal Purpose)</p>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const mobile = "{{ patient.get('mobile', '') }}";
+            const cleanMobile = mobile.replace(/\D/g, "");
+            const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
+            const currentUrl = window.location.href;
+            const text = encodeURIComponent("Hello, here is your medical slip from {{ hospital_name }}: " + currentUrl);
+            const shareBtn = document.getElementById("whatsappShareBtn");
+            if (shareBtn) {
+                shareBtn.href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
+            }
+        });
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>

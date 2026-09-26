@@ -41,20 +41,20 @@ class BarcodeService:
             return ""
     
     @staticmethod
-    def generate_qr_code(data: str) -> str:
+    def generate_qr_code(data: str, box_size: int = 5, border: int = 2) -> str:
         """Generate QR code and return as base64 string"""
         try:
             qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=4,
+                version=None,
+                error_correction=qrcode.constants.ERROR_CORRECT_M,
+                box_size=box_size,
+                border=border,
             )
             qr.add_data(data)
             qr.make(fit=True)
             
             # Create image
-            img = qr.make_image(fill_color="black", back_color="white")
+            img = qr.make_image(fill_color="#0f172a", back_color="white")
             
             # Convert to base64
             buffer = BytesIO()

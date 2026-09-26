@@ -28,12 +28,12 @@ class BillingCharge(Base):
     charge_id = Column(String(30), primary_key=True)
     visit_id = Column(String(30), ForeignKey("visits.visit_id"), nullable=True, index=True)
     ipd_id = Column(String(20), ForeignKey("ipd.ipd_id"), nullable=True, index=True)
-    charge_type = Column(Enum(ChargeType), nullable=False)
+    charge_type = Column(Enum(ChargeType), nullable=False, index=True)
     charge_name = Column(String(100), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
     rate = Column(Numeric(10, 2), nullable=False)
     total_amount = Column(Numeric(10, 2), nullable=False)
-    charge_date = Column(DateTime(timezone=True), server_default=func.now())
+    charge_date = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     created_by = Column(String(20), nullable=False)
     
     # Relationships

@@ -77,9 +77,10 @@ class PatientCRUD:
         self, 
         db: AsyncSession, 
         search_term: str,
-        limit: int = 50
+        limit: int = 50,
+        offset: int = 0
     ) -> List[Patient]:
-        """Search patients by ID, mobile number, or name"""
+        """Search patients by ID, mobile number, or name with pagination"""
         if not search_term or not search_term.strip():
             return []
         
@@ -93,7 +94,25 @@ class PatientCRUD:
                     Patient.mobile_number.ilike(f"%{search_term}%"),
                     Patient.name.ilike(f"%{search_term}%")
                 )
-            ).limit(limit)
+            )
+            .order_by(Patient.created_date.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return result.scalars().all()
+        
+    async def get_all_patients(
+        self,
+        db: AsyncSession,
+        limit: int = 50,
+        offset: int = 0
+    ) -> List[Patient]:
+        """Get paginated list of all patients"""
+        result = await db.execute(
+            select(Patient)
+            .order_by(Patient.created_date.desc())
+            .offset(offset)
+            .limit(limit)
         )
         return result.scalars().all()
     

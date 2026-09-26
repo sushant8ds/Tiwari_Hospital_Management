@@ -2,7 +2,7 @@
 Pydantic schemas for Employee model
 """
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
@@ -20,13 +20,15 @@ class EmployeeBase(BaseModel):
     joining_date: date
     monthly_salary: Decimal
     
-    @validator('duty_hours')
+    @field_validator('duty_hours')
+    @classmethod
     def validate_duty_hours(cls, v):
         if v <= 0:
             raise ValueError('Duty hours must be positive')
         return v
     
-    @validator('monthly_salary')
+    @field_validator('monthly_salary')
+    @classmethod
     def validate_salary(cls, v):
         if v < 0:
             raise ValueError('Monthly salary cannot be negative')
@@ -48,13 +50,15 @@ class EmployeeUpdate(BaseModel):
     monthly_salary: Optional[Decimal] = None
     status: Optional[EmployeeStatus] = None
     
-    @validator('duty_hours')
+    @field_validator('duty_hours')
+    @classmethod
     def validate_duty_hours(cls, v):
         if v is not None and v <= 0:
             raise ValueError('Duty hours must be positive')
         return v
     
-    @validator('monthly_salary')
+    @field_validator('monthly_salary')
+    @classmethod
     def validate_salary(cls, v):
         if v is not None and v < 0:
             raise ValueError('Monthly salary cannot be negative')
@@ -63,12 +67,11 @@ class EmployeeUpdate(BaseModel):
 
 class EmployeeResponse(EmployeeBase):
     """Schema for employee response"""
+    model_config = ConfigDict(from_attributes=True)
+
     employee_id: str
     status: EmployeeStatus
     created_date: datetime
-    
-    class Config:
-        orm_mode = True
 
 
 class SalarySlipRequest(BaseModel):
@@ -77,13 +80,15 @@ class SalarySlipRequest(BaseModel):
     month: int
     year: int
     
-    @validator('month')
+    @field_validator('month')
+    @classmethod
     def validate_month(cls, v):
         if v < 1 or v > 12:
             raise ValueError('Month must be between 1 and 12')
         return v
     
-    @validator('year')
+    @field_validator('year')
+    @classmethod
     def validate_year(cls, v):
         if v < 2000 or v > 2100:
             raise ValueError('Year must be between 2000 and 2100')

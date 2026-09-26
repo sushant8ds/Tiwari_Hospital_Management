@@ -411,7 +411,6 @@ class TestPatientHistory:
         
         # Print visit bill
         response = await async_client.get(f"/api/v1/slips/print/visit-bill/{visit.visit_id}")
-        
         assert response.status_code == 200
         html = response.text
         assert "OPD VISIT RECEIPT &amp; BILL" in html or "OPD VISIT RECEIPT & BILL" in html

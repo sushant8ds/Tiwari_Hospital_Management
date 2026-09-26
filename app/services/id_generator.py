@@ -8,7 +8,7 @@ import asyncio
 
 
 class IDGenerator:
-    """Service for generating unique IDs"""
+    """Service for generating unique IDs across multi-worker environments"""
     
     def __init__(self):
         self._counters = {}
@@ -23,31 +23,28 @@ class IDGenerator:
             now = datetime.now()
             yymm = now.strftime("%y%b").upper()
             prefix = f"P-{yymm}-"
-            key = f"patient_{yymm}"
             
-            if key not in self._counters:
-                if db:
-                    result = await db.execute(
-                        select(Patient.patient_id)
-                        .where(Patient.patient_id.like(f"{prefix}%"))
-                        .order_by(Patient.patient_id.desc())
-                        .limit(1)
-                    )
-                    last_id = result.scalar()
-                    if last_id:
-                        try:
-                            last_seq = int(last_id.split("-")[-1])
-                            self._counters[key] = last_seq
-                        except ValueError:
-                            self._counters[key] = 0
-                    else:
-                        self._counters[key] = 0
-                else:
-                    self._counters[key] = 0
-                    
-            self._counters[key] += 1
-            new_sequence = self._counters[key]
-            return f"{prefix}{new_sequence:04d}"
+            next_seq = 1
+            if db:
+                result = await db.execute(
+                    select(Patient.patient_id)
+                    .where(Patient.patient_id.like(f"{prefix}%"))
+                    .order_by(Patient.patient_id.desc())
+                    .limit(1)
+                )
+                last_id = result.scalar()
+                if last_id:
+                    try:
+                        last_seq = int(last_id.split("-")[-1])
+                        next_seq = last_seq + 1
+                    except (ValueError, IndexError):
+                        next_seq = 1
+            else:
+                key = f"patient_{yymm}"
+                self._counters[key] = self._counters.get(key, 0) + 1
+                next_seq = self._counters[key]
+                
+            return f"{prefix}{next_seq:04d}"
     
     async def generate_visit_id(self, db=None) -> str:
         """Generate unique visit ID: V + YYYYMMDD + HHMMSS + 3-digit counter.
@@ -62,32 +59,28 @@ class IDGenerator:
             date_str = now.strftime("%Y%m%d")
             time_str = now.strftime("%H%M%S")
             prefix = f"V{date_str}{time_str}"
-            second_key = f"visit_{date_str}{time_str}"
             
-            if second_key not in self._counters:
-                if db:
-                    result = await db.execute(
-                        select(Visit.visit_id)
-                        .where(Visit.visit_id.like(f"{prefix}%"))
-                        .order_by(Visit.visit_id.desc())
-                        .limit(1)
-                    )
-                    last_id = result.scalar()
-                    if last_id:
-                        try:
-                            last_seq_str = last_id[len(prefix):]
-                            self._counters[second_key] = int(last_seq_str)
-                        except (ValueError, IndexError):
-                            self._counters[second_key] = 0
-                    else:
-                        self._counters[second_key] = 0
-                else:
-                    self._counters[second_key] = 0
-                    
-            self._counters[second_key] += 1
-            new_sequence = self._counters[second_key]
-            
-            display_seq = (new_sequence - 1) % 1000
+            next_seq = 0
+            if db:
+                result = await db.execute(
+                    select(Visit.visit_id)
+                    .where(Visit.visit_id.like(f"{prefix}%"))
+                    .order_by(Visit.visit_id.desc())
+                    .limit(1)
+                )
+                last_id = result.scalar()
+                if last_id:
+                    try:
+                        last_seq_str = last_id[len(prefix):]
+                        next_seq = int(last_seq_str) + 1
+                    except (ValueError, IndexError):
+                        next_seq = 0
+            else:
+                second_key = f"visit_{date_str}{time_str}"
+                self._counters[second_key] = self._counters.get(second_key, 0) + 1
+                next_seq = self._counters[second_key] - 1
+                
+            display_seq = next_seq % 1000
             return f"{prefix}{display_seq:03d}"
     
     async def generate_ipd_id(self, db=None) -> str:
@@ -102,32 +95,28 @@ class IDGenerator:
             now = datetime.now()
             today = now.strftime("%Y%m%d")
             prefix = f"IPD{today}"
-            key = f"ipd_{today}"
             
-            if key not in self._counters:
-                if db:
-                    result = await db.execute(
-                        select(IPD.ipd_id)
-                        .where(IPD.ipd_id.like(f"{prefix}%"))
-                        .order_by(IPD.ipd_id.desc())
-                        .limit(1)
-                    )
-                    last_id = result.scalar()
-                    if last_id:
-                        try:
-                            last_seq_str = last_id[len(prefix):]
-                            self._counters[key] = int(last_seq_str)
-                        except (ValueError, IndexError):
-                            self._counters[key] = 0
-                    else:
-                        self._counters[key] = 0
-                else:
-                    self._counters[key] = 0
-                    
-            self._counters[key] += 1
-            new_sequence = self._counters[key]
-            
-            display_seq = ((new_sequence - 1) % 9999) + 1
+            next_seq = 1
+            if db:
+                result = await db.execute(
+                    select(IPD.ipd_id)
+                    .where(IPD.ipd_id.like(f"{prefix}%"))
+                    .order_by(IPD.ipd_id.desc())
+                    .limit(1)
+                )
+                last_id = result.scalar()
+                if last_id:
+                    try:
+                        last_seq_str = last_id[len(prefix):]
+                        next_seq = int(last_seq_str) + 1
+                    except (ValueError, IndexError):
+                        next_seq = 1
+            else:
+                key = f"ipd_{today}"
+                self._counters[key] = self._counters.get(key, 0) + 1
+                next_seq = self._counters[key]
+                
+            display_seq = ((next_seq - 1) % 9999) + 1
             return f"{prefix}{display_seq:04d}"
     
     async def generate_charge_id(self) -> str:
@@ -149,32 +138,28 @@ class IDGenerator:
             now = datetime.now()
             today = now.strftime("%Y%m%d")
             prefix = f"U{today}"
-            key = f"user_{today}"
             
-            if key not in self._counters:
-                if db:
-                    result = await db.execute(
-                        select(User.user_id)
-                        .where(User.user_id.like(f"{prefix}%"))
-                        .order_by(User.user_id.desc())
-                        .limit(1)
-                    )
-                    last_id = result.scalar()
-                    if last_id:
-                        try:
-                            last_seq_str = last_id[len(prefix):]
-                            self._counters[key] = int(last_seq_str)
-                        except (ValueError, IndexError):
-                            self._counters[key] = 0
-                    else:
-                        self._counters[key] = 0
-                else:
-                    self._counters[key] = 0
-                    
-            self._counters[key] += 1
-            new_sequence = self._counters[key]
-            
-            display_seq = ((new_sequence - 1) % 999) + 1
+            next_seq = 1
+            if db:
+                result = await db.execute(
+                    select(User.user_id)
+                    .where(User.user_id.like(f"{prefix}%"))
+                    .order_by(User.user_id.desc())
+                    .limit(1)
+                )
+                last_id = result.scalar()
+                if last_id:
+                    try:
+                        last_seq_str = last_id[len(prefix):]
+                        next_seq = int(last_seq_str) + 1
+                    except (ValueError, IndexError):
+                        next_seq = 1
+            else:
+                key = f"user_{today}"
+                self._counters[key] = self._counters.get(key, 0) + 1
+                next_seq = self._counters[key]
+                
+            display_seq = ((next_seq - 1) % 999) + 1
             sequence = str(display_seq).zfill(3)
             return f"{prefix}{sequence}"
     
@@ -187,32 +172,28 @@ class IDGenerator:
             now = datetime.now()
             today = now.strftime("%Y%m%d")
             prefix = f"D{today}"
-            key = f"doctor_{today}"
             
-            if key not in self._counters:
-                if db:
-                    result = await db.execute(
-                        select(Doctor.doctor_id)
-                        .where(Doctor.doctor_id.like(f"{prefix}%"))
-                        .order_by(Doctor.doctor_id.desc())
-                        .limit(1)
-                    )
-                    last_id = result.scalar()
-                    if last_id:
-                        try:
-                            last_seq_str = last_id[len(prefix):]
-                            self._counters[key] = int(last_seq_str)
-                        except (ValueError, IndexError):
-                            self._counters[key] = 0
-                    else:
-                        self._counters[key] = 0
-                else:
-                    self._counters[key] = 0
-                    
-            self._counters[key] += 1
-            new_sequence = self._counters[key]
-            
-            display_seq = ((new_sequence - 1) % 999) + 1
+            next_seq = 1
+            if db:
+                result = await db.execute(
+                    select(Doctor.doctor_id)
+                    .where(Doctor.doctor_id.like(f"{prefix}%"))
+                    .order_by(Doctor.doctor_id.desc())
+                    .limit(1)
+                )
+                last_id = result.scalar()
+                if last_id:
+                    try:
+                        last_seq_str = last_id[len(prefix):]
+                        next_seq = int(last_seq_str) + 1
+                    except (ValueError, IndexError):
+                        next_seq = 1
+            else:
+                key = f"doctor_{today}"
+                self._counters[key] = self._counters.get(key, 0) + 1
+                next_seq = self._counters[key]
+                
+            display_seq = ((next_seq - 1) % 999) + 1
             sequence = str(display_seq).zfill(3)
             return f"{prefix}{sequence}"
     

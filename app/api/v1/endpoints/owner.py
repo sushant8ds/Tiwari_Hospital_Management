@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from datetime import date
 
-from app.core.dependencies import get_db
+from app.core.dependencies import get_db, require_admin
 from app.crud.doctor import doctor_crud
 from app.crud.employee import employee_crud
 from app.crud.salary_payment import salary_payment_crud
@@ -23,7 +23,7 @@ from app.schemas.salary_payment import (
 from app.models.employee import EmployeeStatus
 from app.models.salary_payment import PaymentStatus
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_admin())])
 
 
 # Doctor Management Endpoints

@@ -59,16 +59,31 @@ async def create_patient(
         )
 
 
+@router.get("/", response_model=List[PatientResponse])
+async def list_patients(
+    limit: int = Query(50, ge=1, le=200, description="Number of patients to return"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get paginated list of patients
+    """
+    patients = await patient_crud.get_all_patients(db=db, limit=limit, offset=offset)
+    return patients
+
+
 @router.get("/search", response_model=List[PatientResponse])
 async def search_patients(
     query: Optional[str] = Query(None, description="Search by patient ID, mobile number, or name"),
     patient_id: Optional[str] = Query(None, description="Search by patient ID"),
     mobile_number: Optional[str] = Query(None, description="Search by mobile number"),
     name: Optional[str] = Query(None, description="Search by patient name"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum number of results to return"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Search patients by ID, mobile number, or name
+    Search patients by ID, mobile number, or name with pagination
     
     Requirements: 1.7, 13.1
     - Supports search by Patient_ID, Mobile_Number, and Patient_Name
@@ -87,7 +102,9 @@ async def search_patients(
         
         patients = await patient_crud.search_patients(
             db=db,
-            search_term=search_term
+            search_term=search_term,
+            limit=limit,
+            offset=offset
         )
         
         return patients

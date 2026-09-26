@@ -23,12 +23,12 @@ class Patient(Base):
     __tablename__ = "patients"
     
     patient_id = Column(String(20), primary_key=True)
-    name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, index=True)
     age = Column(Integer, nullable=False)
     gender = Column(Enum(Gender), nullable=False)
     address = Column(Text, nullable=False)
-    mobile_number = Column(String(15), nullable=False)
-    created_date = Column(DateTime(timezone=True), server_default=func.now())
+    mobile_number = Column(String(15), nullable=False, index=True)
+    created_date = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     updated_date = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationships
