@@ -2,337 +2,404 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OPD Prescription Slip - {{ patient.name }} ({{ patient.patient_id }})</title>
+    <title>OPD Record &mdash; {{ patient.name }} ({{ patient.patient_id }})</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @page {
             size: A4;
-            margin: 8mm 10mm 8mm 10mm;
+            margin: 7mm 8mm 7mm 8mm;
         }
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
         body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-            color: #1e293b;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #0f172a;
             background-color: #ffffff;
-            font-size: 10pt;
-            line-height: 1.4;
+            font-size: 9.5pt;
+            line-height: 1.45;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            padding: 8px;
         }
         
-        /* Action Bar for On-Screen View */
-        .no-print-banner {
-            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        /* Corporate Minimal Action Toolbar (Hidden on Print) */
+        .no-print-toolbar {
+            background: #0f172a;
             color: #ffffff;
-            padding: 10px 20px;
-            margin-bottom: 16px;
-            border-radius: 8px;
+            padding: 10px 18px;
+            margin-bottom: 14px;
+            border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
         }
-        .banner-title {
-            font-size: 11pt;
+        .toolbar-title {
+            font-size: 9.5pt;
             font-weight: 600;
+            letter-spacing: 0.02em;
             display: flex;
             align-items: center;
+            gap: 10px;
+        }
+        .toolbar-tag {
+            background: #1e293b;
+            color: #94a3b8;
+            font-size: 7.5pt;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .btn-group {
+            display: flex;
             gap: 8px;
         }
-        .btn-action {
+        .btn-ui {
             padding: 6px 14px;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 9pt;
+            font-size: 8.5pt;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             border: none;
-            transition: all 0.2s ease;
+            transition: opacity 0.15s ease;
         }
         .btn-print {
             background: #ffffff;
-            color: #1e3a8a;
+            color: #0f172a;
         }
         .btn-print:hover {
             background: #f1f5f9;
         }
         .btn-whatsapp {
-            background: #22c55e;
+            background: #16a34a;
             color: #ffffff;
-            margin-left: 8px;
         }
         .btn-whatsapp:hover {
-            background: #16a34a;
+            opacity: 0.9;
         }
 
-        /* Slip Main Container */
-        .slip-container {
-            border: 1.5px solid #cbd5e1;
-            border-radius: 8px;
-            padding: 16px;
+        /* Document Container */
+        .document-wrapper {
+            border: 1px solid #0f172a;
+            padding: 16px 18px;
             background: #ffffff;
-            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 40px);
         }
 
-        /* Hospital Header */
-        .header-grid {
+        /* Corporate Minimal Header */
+        .header-section {
             display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            border-bottom: 2.5px solid #1e3a8a;
+            grid-template-columns: 1.1fr 1.4fr 1.1fr;
+            align-items: start;
+            border-bottom: 2px solid #0f172a;
             padding-bottom: 12px;
             margin-bottom: 12px;
             gap: 12px;
         }
-        .doctor-card {
+        .doctor-column {
             text-align: left;
         }
-        .doctor-name {
-            font-size: 13pt;
+        .doctor-title {
+            font-size: 11.5pt;
             font-weight: 700;
             color: #0f172a;
-            margin: 0 0 2px 0;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.01em;
+            margin-bottom: 2px;
         }
-        .doctor-qualification {
-            font-size: 8.5pt;
+        .doctor-sub {
+            font-size: 8pt;
             font-weight: 600;
             color: #2563eb;
-            margin: 0 0 2px 0;
+            margin-bottom: 2px;
         }
-        .doctor-meta {
-            font-size: 8pt;
-            color: #64748b;
-            line-height: 1.3;
-        }
-        .doctor-badge {
-            display: inline-block;
-            background: #eff6ff;
-            color: #1d4ed8;
-            padding: 2px 6px;
-            border-radius: 4px;
+        .doctor-meta-text {
             font-size: 7.5pt;
-            font-weight: 600;
-            margin-top: 4px;
-            border: 1px solid #bfdbfe;
+            color: #64748b;
+            line-height: 1.35;
         }
 
-        .hospital-branding {
+        .hospital-column {
             text-align: center;
         }
-        .hospital-logo {
-            max-height: 48px;
-            max-width: 90px;
-            margin-bottom: 4px;
-            object-fit: contain;
-        }
-        .hospital-name {
-            font-size: 18pt;
+        .hospital-brand-name {
+            font-size: 16pt;
             font-weight: 800;
-            color: #1e3a8a;
-            margin: 0;
-            letter-spacing: 0.5px;
+            color: #0f172a;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
+            line-height: 1.15;
+            margin-bottom: 3px;
         }
-        .hospital-tagline {
-            font-size: 8pt;
-            font-weight: 600;
-            color: #059669;
+        .hospital-subtitle {
+            font-size: 7pt;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 2px;
+            margin-bottom: 4px;
+        }
+        .hospital-address-line {
+            font-size: 7.5pt;
+            color: #475569;
+            line-height: 1.3;
         }
 
-        .hospital-contact {
+        .record-column {
             text-align: right;
-            font-size: 8pt;
+        }
+        .doc-badge {
+            display: inline-block;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 3px 8px;
+            font-size: 7.5pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .record-contact {
+            font-size: 7.5pt;
             color: #475569;
             line-height: 1.35;
         }
-        .emergency-pill {
-            display: inline-block;
-            background: #fee2e2;
-            color: #b91c1c;
-            padding: 2px 8px;
-            border-radius: 4px;
+        .emergency-label {
             font-weight: 700;
-            font-size: 8pt;
-            margin-top: 4px;
-            border: 1px solid #fecaca;
+            color: #dc2626;
         }
 
-        /* Patient Information Box & QR */
-        .patient-box {
-            background: #f8fafc;
+        /* Patient Info Matrix */
+        .patient-card {
             border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px 14px;
-            margin-bottom: 12px;
+            background: #f8fafc;
+            margin-bottom: 10px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
+            align-items: stretch;
         }
-        .patient-info-grid {
+        .patient-grid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px 14px;
-            font-size: 9.5pt;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 10px 14px;
+            gap: 8px 14px;
         }
-        .info-cell {
+        .field-group {
             display: flex;
             flex-direction: column;
         }
-        .info-label {
-            font-size: 7.5pt;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .field-label {
+            font-size: 6.8pt;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
             color: #64748b;
             margin-bottom: 1px;
         }
-        .info-value {
+        .field-value {
+            font-size: 9pt;
             font-weight: 600;
             color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .info-highlight {
-            color: #1e3a8a;
+        .field-highlight {
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
+            color: #0f172a;
+        }
+        .field-name {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 9.5pt;
         }
 
-        /* QR Code Container */
-        .qr-card {
+        /* QR Code Matrix */
+        .qr-section {
+            border-left: 1px solid #e2e8f0;
+            padding: 8px 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            padding-left: 12px;
-            border-left: 1px dashed #cbd5e1;
-            min-width: 105px;
-        }
-        .qr-image {
-            width: 80px;
-            height: 80px;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 2px;
             background: #ffffff;
+            min-width: 96px;
         }
-        .qr-caption {
-            font-size: 6.5pt;
-            font-weight: 600;
-            color: #475569;
+        .qr-frame {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            display: block;
+        }
+        .qr-hint {
+            font-size: 5.8pt;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #64748b;
             margin-top: 3px;
-            line-height: 1.15;
-            max-width: 95px;
+            text-align: center;
+            line-height: 1.1;
         }
 
-        /* Patient Diagnostics Banner */
+        /* Diagnostic & Test History Ribbon */
         {% if investigations_done and investigations_done|length > 0 %}
-        .diagnostics-banner {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 5px;
+        .diagnostics-strip {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
             padding: 5px 10px;
             margin-bottom: 10px;
-            font-size: 8pt;
-            color: #166534;
+            font-size: 7.5pt;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
-        .diagnostics-banner strong {
-            color: #14532d;
+        .diag-tag {
+            font-size: 6.8pt;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #0f172a;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border: 1px solid #cbd5e1;
+        }
+        .diag-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 1px 6px;
+            font-size: 7.5pt;
+            font-weight: 500;
+            color: #1e293b;
         }
         {% endif %}
 
-        /* Clinical Vitals Bar */
-        .vitals-bar {
+        /* Clinical Vitals Segment */
+        .vitals-matrix {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 6px 10px;
-            margin-bottom: 10px;
-            font-size: 8.5pt;
-            color: #334155;
-            font-weight: 500;
-        }
-        .vital-item span {
-            font-weight: 700;
-            color: #0f172a;
-        }
-
-        /* Prescription Area */
-        .prescription-area {
-            position: relative;
-            min-height: 520px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 14px;
+            border: 1px solid #0f172a;
             background: #ffffff;
             margin-bottom: 12px;
         }
-        .rx-symbol {
-            font-size: 24pt;
-            font-weight: 800;
+        .vital-cell {
+            padding: 5px 8px;
+            border-right: 1px solid #cbd5e1;
+            font-size: 7.5pt;
+        }
+        .vital-cell:last-child {
+            border-right: none;
+        }
+        .vital-tag {
+            font-size: 6.5pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+        .vital-line {
+            height: 14px;
+            border-bottom: 1px dotted #94a3b8;
+        }
+
+        /* Prescription Canvas */
+        .prescription-canvas {
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            padding: 14px 18px;
+            position: relative;
+            min-height: 520px;
+            background: #ffffff;
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 18px;
+        }
+        .gutter-notes {
+            border-right: 1px solid #f1f5f9;
+            padding-right: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 90px;
+        }
+        .gutter-label {
+            font-size: 6.8pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+        .rx-main {
+            position: relative;
+        }
+        .rx-sign {
             font-family: 'Times New Roman', Georgia, serif;
-            color: #1e3a8a;
+            font-size: 26pt;
+            font-weight: 700;
+            color: #0f172a;
             line-height: 1;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: inline-block;
         }
-        .rx-watermark {
+        .rx-ghost {
             position: absolute;
             top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 80pt;
             font-family: 'Times New Roman', Georgia, serif;
-            color: rgba(30, 58, 138, 0.03);
+            font-size: 90pt;
+            font-weight: 700;
+            color: rgba(15, 23, 42, 0.018);
             pointer-events: none;
             user-select: none;
-            font-weight: bold;
         }
 
-        /* Slip Footer */
-        .slip-footer {
+        /* Minimal Document Footer */
+        .document-footer {
+            border-top: 1.5px solid #0f172a;
+            padding-top: 10px;
+            margin-top: 12px;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            padding-top: 10px;
-            border-top: 1.5px solid #e2e8f0;
-            font-size: 8pt;
+            font-size: 7.2pt;
             color: #64748b;
         }
-        .footer-note {
-            max-width: 65%;
-            line-height: 1.35;
+        .footer-legal {
+            max-width: 60%;
+            line-height: 1.4;
         }
-        .footer-note strong {
-            color: #334155;
+        .footer-legal strong {
+            color: #0f172a;
+            font-weight: 600;
         }
-        .signature-block {
+        .signature-section {
             text-align: center;
             min-width: 140px;
         }
-        .signature-line {
+        .signature-rule {
             border-top: 1px solid #0f172a;
-            margin-top: 35px;
             padding-top: 3px;
-            font-size: 8pt;
+            font-size: 7.5pt;
             font-weight: 700;
             color: #0f172a;
+            letter-spacing: 0.02em;
         }
 
-        /* Print Specific Rules */
+        /* Print Media Rules */
         @media print {
             body {
                 padding: 0;
@@ -341,150 +408,183 @@
             .no-print {
                 display: none !important;
             }
-            .slip-container {
-                border: none;
-                padding: 0;
+            .document-wrapper {
+                border: 1px solid #0f172a;
+                padding: 12px 14px;
+                min-height: 98vh;
             }
-            .prescription-area {
+            .prescription-canvas {
                 min-height: 560px;
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
 
-    <!-- Print & Share Toolbar (Hidden on Print) -->
-    <div class="no-print no-print-banner">
-        <div class="banner-title">
-            <i class="fas fa-file-prescription"></i>
-            <span>OPD Prescription Preview &mdash; <strong>{{ patient.name }}</strong> ({{ patient.patient_id }})</span>
+    <!-- Corporate Minimal On-Screen Toolbar (Hidden on Print) -->
+    <div class="no-print no-print-toolbar">
+        <div class="toolbar-title">
+            <i class="fa-solid fa-notes-medical"></i>
+            <span>Prescription Slip Preview &mdash; <strong>{{ patient.name }}</strong></span>
+            <span class="toolbar-tag">{{ patient.patient_id }}</span>
         </div>
-        <div>
-            <button onclick="window.print()" class="btn-action btn-print">
-                <i class="fas fa-print"></i> Print OPD Slip
+        <div class="btn-group">
+            <button onclick="window.print()" class="btn-ui btn-print">
+                <i class="fa-solid fa-print"></i> Print Slip
             </button>
-            <a id="whatsappShareBtn" href="#" target="_blank" class="btn-action btn-whatsapp">
-                <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            <a id="whatsappShareBtn" href="#" target="_blank" class="btn-ui btn-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </a>
         </div>
     </div>
 
-    <!-- Main OPD Slip Container -->
-    <div class="slip-container">
+    <!-- Main Clean Minimal Document -->
+    <div class="document-wrapper">
 
         <!-- Header Section -->
-        <div class="header-grid">
-            <div class="doctor-card">
-                <h3 class="doctor-name">{{ doctor.name if doctor else "Medical Officer" }}</h3>
-                <div class="doctor-qualification">M.B.B.S. &bull; {{ doctor.department if doctor else visit.department or "Consultant" }}</div>
-                <div class="doctor-meta">Reg. No: PMC-{{ doctor.doctor_id if doctor else 'GEN' }}</div>
-                <div class="doctor-badge">
-                    <i class="far fa-clock"></i> Mon &ndash; Sat: 10:00 AM &ndash; 06:00 PM
+        <header class="header-section">
+            <!-- Doctor Details -->
+            <div class="doctor-column">
+                <h2 class="doctor-title">{{ doctor.name if doctor else "Medical Officer" }}</h2>
+                <div class="doctor-sub">M.B.B.S. &bull; {{ doctor.department if doctor else visit.department or "General Medicine" }}</div>
+                <div class="doctor-meta-text">Registration No: PMC-{{ doctor.doctor_id if doctor else 'GEN01' }}</div>
+                <div class="doctor-meta-text">OPD Hours: Mon &ndash; Sat (10:00 AM &ndash; 06:00 PM)</div>
+            </div>
+
+            <!-- Hospital Corporate Branding -->
+            <div class="hospital-column">
+                <h1 class="hospital-brand-name">{{ hospital_name }}</h1>
+                <div class="hospital-subtitle">Center for Clinical Excellence &bull; Multi-Speciality</div>
+                <div class="hospital-address-line">{{ hospital_address }}</div>
+                <div class="hospital-address-line">Phone: {{ hospital_phone }}</div>
+            </div>
+
+            <!-- Record Meta -->
+            <div class="record-column">
+                <div class="doc-badge">Outpatient Record</div>
+                <div class="record-contact">Emergency: <span class="emergency-label">24&times;7 Active</span></div>
+                <div class="record-contact">Helpdesk: {{ hospital_phone }}</div>
+            </div>
+        </header>
+
+        <!-- Patient Demographics & QR Matrix -->
+        <section class="patient-card">
+            <div class="patient-grid">
+                <div class="field-group">
+                    <span class="field-label">Patient Name</span>
+                    <span class="field-value field-name">{{ patient.name }}</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Patient ID</span>
+                    <span class="field-value field-highlight">{{ patient.patient_id }}</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Age / Gender</span>
+                    <span class="field-value">{{ patient.age }} Yrs / {{ patient.gender.value if patient.gender.value is defined else patient.gender }}</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Contact No.</span>
+                    <span class="field-value">{{ patient.mobile_number }}</span>
+                </div>
+
+                <div class="field-group">
+                    <span class="field-label">Visit ID</span>
+                    <span class="field-value field-highlight">{{ visit.visit_id }}</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Date of Consultation</span>
+                    <span class="field-value">{{ visit_date }}</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Department</span>
+                    <span class="field-value">{{ doctor.department if doctor else visit.department or 'General' }}</span>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Residential Address</span>
+                    <span class="field-value">{{ patient.address or 'Local / Not Provided' }}</span>
                 </div>
             </div>
 
-            <div class="hospital-branding">
-                <img src="/static/images/hospital_logo.png" alt="Logo" class="hospital-logo" onerror="this.style.display='none'">
-                <h1 class="hospital-name">{{ hospital_name }}</h1>
-                <div class="hospital-tagline">Excellence in Healthcare &bull; 24x7 Care</div>
-            </div>
-
-            <div class="hospital-contact">
-                <div><strong>{{ hospital_address }}</strong></div>
-                <div>Phone: {{ hospital_phone }}</div>
-                <div>Email: contact@tiwarihospital.com</div>
-                <div class="emergency-pill">
-                    <i class="fas fa-ambulance"></i> 24x7 Emergency Available
-                </div>
-            </div>
-        </div>
-
-        <!-- Patient Demographics & QR Code -->
-        <div class="patient-box">
-            <div class="patient-info-grid">
-                <div class="info-cell">
-                    <span class="info-label">Patient Name</span>
-                    <span class="info-value info-highlight">{{ patient.name }}</span>
-                </div>
-                <div class="info-cell">
-                    <span class="info-label">Patient ID</span>
-                    <span class="info-value">{{ patient.patient_id }}</span>
-                </div>
-                <div class="info-cell">
-                    <span class="info-label">Age / Gender</span>
-                    <span class="info-value">{{ patient.age }} Yrs / {{ patient.gender.value if patient.gender.value is defined else patient.gender }}</span>
-                </div>
-                <div class="info-cell">
-                    <span class="info-label">Contact / Mobile</span>
-                    <span class="info-value">{{ patient.mobile_number }}</span>
-                </div>
-                <div class="info-cell">
-                    <span class="info-label">Visit ID & Date</span>
-                    <span class="info-value">{{ visit.visit_id }} &bull; {{ visit_date }}</span>
-                </div>
-                <div class="info-cell">
-                    <span class="info-label">City / Address</span>
-                    <span class="info-value">{{ patient.address or 'Local / Not Provided' }}</span>
-                </div>
-            </div>
-
-            <!-- Dynamic Patient Health Record QR Code -->
-            <div class="qr-card">
+            <!-- High-Density Patient Record QR -->
+            <div class="qr-section">
                 {% if qr_code_image %}
-                <img src="{{ qr_code_image }}" alt="Patient Record QR" class="qr-image">
+                <img src="{{ qr_code_image }}" alt="QR Record" class="qr-frame">
                 {% else %}
-                <div style="width:80px; height:80px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; border:1px solid #cbd5e1; font-size:7pt; color:#64748b;">QR Code</div>
+                <div style="width:70px; height:70px; background:#f8fafc; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; font-size:6pt; color:#94a3b8;">QR</div>
                 {% endif %}
-                <div class="qr-caption">Scan for Patient & Diagnostic History</div>
+                <div class="qr-hint">Scan For History</div>
             </div>
-        </div>
+        </section>
 
-        <!-- Diagnostic & Test History Ribbon (If Available) -->
+        <!-- Diagnostic / Test History Ribbon (If Available) -->
         {% if investigations_done and investigations_done|length > 0 %}
-        <div class="diagnostics-banner">
-            <i class="fas fa-microscope"></i>
-            <div>
-                <strong>Recorded Diagnostics / Tests:</strong>
-                {% for test in investigations_done[:4] %}
-                <span style="background: white; padding: 1px 6px; border-radius: 3px; border: 1px solid #bbf7d0; margin-left: 4px;">{{ test }}</span>
-                {% endfor %}
-                {% if investigations_done|length > 4 %}
-                <span style="font-size: 7.5pt; color: #15803d; margin-left: 4px;">+{{ investigations_done|length - 4 }} more in QR</span>
-                {% endif %}
-            </div>
+        <div class="diagnostics-strip">
+            <span class="diag-tag"><i class="fa-solid fa-microscope me-1"></i> Recorded Diagnostics</span>
+            {% for test in investigations_done[:4] %}
+            <span class="diag-item">{{ test }}</span>
+            {% endfor %}
+            {% if investigations_done|length > 4 %}
+            <span style="font-size: 7pt; color: #64748b; font-weight: 600;">+{{ investigations_done|length - 4 }} more in QR</span>
+            {% endif %}
         </div>
         {% endif %}
 
         <!-- Clinical Vitals Tracking Line -->
-        <div class="vitals-bar">
-            <div class="vital-item">B.P: <span>___ / ___ mmHg</span></div>
-            <div class="vital-item">Pulse: <span>___ bpm</span></div>
-            <div class="vital-item">Temp: <span>___ &deg;F</span></div>
-            <div class="vital-item">SpO2: <span>___ %</span></div>
-            <div class="vital-item">Weight: <span>___ kg</span></div>
-        </div>
+        <section class="vitals-matrix">
+            <div class="vital-cell">
+                <div class="vital-tag">BP (mmHg)</div>
+                <div class="vital-line"></div>
+            </div>
+            <div class="vital-cell">
+                <div class="vital-tag">Pulse (bpm)</div>
+                <div class="vital-line"></div>
+            </div>
+            <div class="vital-cell">
+                <div class="vital-tag">Temp (&deg;F)</div>
+                <div class="vital-line"></div>
+            </div>
+            <div class="vital-cell">
+                <div class="vital-tag">SpO2 (%)</div>
+                <div class="vital-line"></div>
+            </div>
+            <div class="vital-cell">
+                <div class="vital-tag">Weight (kg)</div>
+                <div class="vital-line"></div>
+            </div>
+        </section>
 
-        <!-- Prescription Canvas -->
-        <div class="prescription-area">
-            <div class="rx-symbol">&#8478;</div>
-            <div class="rx-watermark">&#8478;</div>
-        </div>
+        <!-- Prescription Body -->
+        <main class="prescription-canvas">
+            <div class="gutter-notes">
+                <div>
+                    <span class="gutter-label">Clinical Notes</span>
+                </div>
+                <div>
+                    <span class="gutter-label">Diagnosis</span>
+                </div>
+                <div>
+                    <span class="gutter-label">Follow-up</span>
+                </div>
+            </div>
+            <div class="rx-main">
+                <div class="rx-sign">&#8478;</div>
+                <div class="rx-ghost">&#8478;</div>
+            </div>
+        </main>
 
-        <!-- Footer Notice & Signature -->
-        <div class="slip-footer">
-            <div class="footer-note">
-                <strong>Important Instructions:</strong><br>
-                1. This OPD consultation slip is valid for 7 days from the date of issue.<br>
-                2. Please bring this slip and previous medical records during follow-up visits.<br>
-                3. In case of emergency or sudden deterioration, visit Emergency Ward immediately.<br>
-                <em style="font-size: 7pt; color: #94a3b8;">* Not for Medico-Legal purposes. Computer generated hospital record.</em>
+        <!-- Document Footer -->
+        <footer class="document-footer">
+            <div class="footer-legal">
+                <strong>Important Medical Instructions:</strong><br>
+                1. Consultation is valid for 7 days from the date of issuance.<br>
+                2. Kindly present this document and previous medical records during follow-up visits.<br>
+                <span style="font-size: 6.5pt; color: #94a3b8;">* Electronic Hospital Record &bull; Not for Medico-Legal purposes.</span>
             </div>
 
-            <div class="signature-block">
-                <div class="signature-line">Authorized Sign / Doctor</div>
+            <div class="signature-section">
+                <div class="signature-rule">Consultant Signature</div>
             </div>
-        </div>
+        </footer>
 
     </div>
 
@@ -494,7 +594,7 @@
             const cleanMobile = mobile.replace(/\D/g, "");
             const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
             const currentUrl = window.location.href;
-            const text = encodeURIComponent("Hello {{ patient.name }}, here is your OPD Prescription Slip from {{ hospital_name }}: " + currentUrl);
+            const text = encodeURIComponent("Hello {{ patient.name }}, here is your OPD Prescription Record from {{ hospital_name }}: " + currentUrl);
             const shareBtn = document.getElementById("whatsappShareBtn");
             if (shareBtn) {
                 shareBtn.href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
@@ -502,7 +602,6 @@
         });
         
         window.onload = function() {
-            // Auto trigger print dialog if previewed directly
             window.print();
         };
     </script>
