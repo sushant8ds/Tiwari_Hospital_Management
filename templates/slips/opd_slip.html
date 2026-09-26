@@ -134,8 +134,20 @@
         .hospital-column {
             text-align: center;
         }
+        .hospital-logo-wrap {
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .hospital-logo-img {
+            max-height: 48px;
+            max-width: 130px;
+            object-fit: contain;
+            display: block;
+        }
         .hospital-brand-name {
-            font-size: 16pt;
+            font-size: 15pt;
             font-weight: 800;
             color: #0f172a;
             letter-spacing: 0.04em;
@@ -453,6 +465,9 @@
 
             <!-- Hospital Corporate Branding -->
             <div class="hospital-column">
+                <div class="hospital-logo-wrap">
+                    <img src="/static/images/hospital_logo.png" alt="{{ hospital_name }} Logo" class="hospital-logo-img" onerror="this.style.display='none'">
+                </div>
                 <h1 class="hospital-brand-name">{{ hospital_name }}</h1>
                 <div class="hospital-subtitle">Center for Clinical Excellence &bull; Multi-Speciality</div>
                 <div class="hospital-address-line">{{ hospital_address }}</div>
