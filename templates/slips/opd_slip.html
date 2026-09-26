@@ -195,6 +195,13 @@
             font-weight: 700;
             color: #dc2626;
         }
+        .trauma-emergency-tag {
+            font-size: 9pt;
+            font-weight: 800;
+            color: #dc2626;
+            letter-spacing: 0.01em;
+            margin-top: 1px;
+        }
 
         /* Patient Info Matrix */
         .patient-card {
@@ -464,7 +471,8 @@
                 <div class="doc-badge">Outpatient Record</div>
                 <div class="hospital-contact-address">{{ hospital_address }}</div>
                 <div class="hospital-contact-phone">Phone: {{ hospital_phone }}</div>
-                <div>Emergency: <span class="emergency-label">24&times;7 Active (Trauma Emergency)</span></div>
+                <div>Emergency: <span class="emergency-label">24&times;7 Active</span></div>
+                <div class="trauma-emergency-tag">(Trauma Emergency)</div>
             </div>
         </header>
 
