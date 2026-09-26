@@ -185,6 +185,50 @@ async def print_visit_bill(
         raise HTTPException(status_code=500, detail=f"Error generating visit bill: {str(e)}")
 
 
+@router.get("/print/discharge-summary/{ipd_id}", response_class=HTMLResponse)
+async def print_discharge_summary(
+    request: Request,
+    ipd_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate printable clinical Discharge Summary PDF/HTML matching sample format"""
+    try:
+        from app.crud.ipd import ipd_crud
+        from datetime import timedelta
+        
+        ipd = await ipd_crud.get_ipd_by_id(db, ipd_id)
+        if not ipd:
+            raise HTTPException(status_code=404, detail="IPD record not found")
+        
+        admission_date_formatted = ipd.admission_date.strftime("%d-%b-%Y, %I:%M %p") if ipd.admission_date else datetime.now().strftime("%d-%b-%Y, %I:%M %p")
+        discharge_date_formatted = ipd.discharge_date.strftime("%d-%b-%Y, %I:%M %p") if ipd.discharge_date else datetime.now().strftime("%d-%b-%Y, %I:%M %p")
+        operation_date_formatted = ipd.operation_date.strftime("%d-%b-%Y") if ipd.operation_date else (ipd.admission_date.strftime("%d-%b-%Y") if ipd.admission_date else datetime.now().strftime("%d-%b-%Y"))
+        
+        follow_up_dt = (ipd.discharge_date or datetime.now()) + timedelta(days=5)
+        follow_up_date_formatted = follow_up_dt.strftime("%d-%b-%Y (%A)")
+        
+        return templates.TemplateResponse(
+            request=request,
+            name="slips/discharge_summary.html",
+            context={
+                "ipd": ipd,
+                "patient": ipd.patient,
+                "doctor": ipd.attending_doctor,
+                "admission_date_formatted": admission_date_formatted,
+                "discharge_date_formatted": discharge_date_formatted,
+                "operation_date_formatted": operation_date_formatted,
+                "follow_up_date_formatted": follow_up_date_formatted,
+                "hospital_name": settings.HOSPITAL_NAME,
+                "hospital_address": settings.HOSPITAL_ADDRESS,
+                "hospital_phone": settings.HOSPITAL_PHONE
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating discharge summary: {str(e)}")
+
+
 @router.get("/print/{slip_id}", response_class=HTMLResponse)
 async def print_slip(
     request: Request,
@@ -199,6 +243,35 @@ async def print_slip(
     content = json.loads(slip.slip_content)
     patient = content.get("patient", {})
     
+    # If this is a DISCHARGE slip and has an ipd_id, render the comprehensive Discharge Summary
+    if slip.slip_type == SlipType.DISCHARGE and slip.ipd_id:
+        from app.crud.ipd import ipd_crud
+        from datetime import timedelta
+        ipd = await ipd_crud.get_ipd_by_id(db, slip.ipd_id)
+        if ipd:
+            admission_date_formatted = ipd.admission_date.strftime("%d-%b-%Y, %I:%M %p") if ipd.admission_date else datetime.now().strftime("%d-%b-%Y, %I:%M %p")
+            discharge_date_formatted = ipd.discharge_date.strftime("%d-%b-%Y, %I:%M %p") if ipd.discharge_date else datetime.now().strftime("%d-%b-%Y, %I:%M %p")
+            operation_date_formatted = ipd.operation_date.strftime("%d-%b-%Y") if ipd.operation_date else (ipd.admission_date.strftime("%d-%b-%Y") if ipd.admission_date else datetime.now().strftime("%d-%b-%Y"))
+            follow_up_dt = (ipd.discharge_date or datetime.now()) + timedelta(days=5)
+            follow_up_date_formatted = follow_up_dt.strftime("%d-%b-%Y (%A)")
+            
+            return templates.TemplateResponse(
+                request=request,
+                name="slips/discharge_summary.html",
+                context={
+                    "ipd": ipd,
+                    "patient": ipd.patient,
+                    "doctor": ipd.attending_doctor,
+                    "admission_date_formatted": admission_date_formatted,
+                    "discharge_date_formatted": discharge_date_formatted,
+                    "operation_date_formatted": operation_date_formatted,
+                    "follow_up_date_formatted": follow_up_date_formatted,
+                    "hospital_name": settings.HOSPITAL_NAME,
+                    "hospital_address": settings.HOSPITAL_ADDRESS,
+                    "hospital_phone": settings.HOSPITAL_PHONE
+                }
+            )
+
     gen_dt = slip.generated_date
     if not gen_dt:
         try:

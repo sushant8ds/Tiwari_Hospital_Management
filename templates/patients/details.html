@@ -383,10 +383,13 @@ function displayPatientDetails(patient, history) {
                     <td><span class="status-badge status-${ipd.status.toLowerCase()}">${ipd.status}</span></td>
                     <td>
                         ${ipd.status === 'DISCHARGED' ? `
-                            <button class="btn btn-sm btn-primary" onclick="printDischargeSlip('${ipd.ipd_id}')" style="padding: 4px 8px; font-size: 12px; margin-right: 5px;">
+                            <button class="btn btn-sm" onclick="printDischargeSummary('${ipd.ipd_id}')" style="padding: 4px 8px; font-size: 11px; margin-right: 4px; background-color: #003B73; color: white; border: none; border-radius: 4px; font-weight: 600;">
+                                <i class="fas fa-file-medical"></i> Summary
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="printDischargeSlip('${ipd.ipd_id}')" style="padding: 4px 8px; font-size: 11px; margin-right: 4px;">
                                 <i class="fas fa-print"></i> Bill
                             </button>
-                            <button class="btn btn-sm btn-success" onclick="shareDischargeWhatsApp('${ipd.ipd_id}', '${patient.name}', '${patient.mobile_number}')" style="padding: 4px 8px; font-size: 12px; background-color: #25D366; border-color: #25D366; color: white;">
+                            <button class="btn btn-sm btn-success" onclick="shareDischargeWhatsApp('${ipd.ipd_id}', '${patient.name}', '${patient.mobile_number}')" style="padding: 4px 8px; font-size: 11px; background-color: #25D366; border-color: #25D366; color: white;">
                                 <i class="fab fa-whatsapp"></i> Share
                             </button>
                         ` : `
@@ -481,6 +484,10 @@ function shareVisitBillWhatsApp(visitId, name, mobileNumber) {
     const slipUrl = `${window.location.origin}/api/v1/slips/print/visit-bill/${visitId}`;
     const text = `*Surya Hospital*\n\nHello, here is the OPD Visit Bill/Receipt for patient *${name}*:\n${slipUrl}`;
     window.open(`https://wa.me/${mobile}?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function printDischargeSummary(ipdId) {
+    window.open(`/api/v1/discharge/${ipdId}/summary`, '_blank');
 }
 
 async function printDischargeSlip(ipdId) {

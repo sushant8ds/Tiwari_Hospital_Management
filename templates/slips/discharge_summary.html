@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Discharge Summary &mdash; {{ patient.name }} ({{ patient.patient_id }})</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @page {
+            size: A4;
+            margin: 12mm 14mm 12mm 14mm;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1e293b;
+            background-color: #ffffff;
+            font-size: 8.8pt;
+            line-height: 1.42;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Top Action Bar (Screen Only) */
+        .no-print-toolbar {
+            background: #003B73;
+            color: #ffffff;
+            padding: 10px 20px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 14px rgba(0, 59, 115, 0.15);
+        }
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 9.5pt;
+            font-weight: 600;
+        }
+        .toolbar-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8pt;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-ui {
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 8.5pt;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            transition: opacity 0.15s ease;
+        }
+        .btn-print {
+            background: #ffffff;
+            color: #003B73;
+        }
+        .btn-print:hover {
+            background: #f1f5f9;
+        }
+        .btn-whatsapp {
+            background: #16a34a;
+            color: #ffffff;
+        }
+        .btn-whatsapp:hover {
+            opacity: 0.9;
+        }
+
+        /* Discharge Document Sheet */
+        .discharge-sheet {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+        }
+
+        /* Header Area */
+        .doc-header {
+            text-align: center;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            border-bottom: 1.5px solid #003B73;
+        }
+        .hospital-title {
+            font-size: 17pt;
+            font-weight: 800;
+            color: #003B73;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .hospital-subtitle {
+            font-size: 8pt;
+            font-weight: 600;
+            color: #0284c7;
+            margin-bottom: 3px;
+        }
+        .hospital-meta {
+            font-size: 7.2pt;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        /* Title Ribbon */
+        .title-ribbon {
+            background: #003B73;
+            color: #ffffff;
+            text-align: center;
+            padding: 5px 0;
+            font-size: 10.5pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        /* Patient Demographics Table */
+        .patient-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+            border: 1px solid #cbd5e1;
+            font-size: 8.2pt;
+        }
+        .patient-table td {
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        .p-label {
+            width: 18%;
+            background-color: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+        }
+        .p-val {
+            width: 32%;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        /* Section Headings */
+        .section-block {
+            margin-bottom: 11px;
+        }
+        .section-header {
+            background-color: #f0f4f9;
+            border-left: 4px solid #003B73;
+            padding: 3px 8px;
+            font-size: 8.8pt;
+            font-weight: 700;
+            color: #003B73;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 6px;
+        }
+        .section-content {
+            padding: 0 4px;
+            font-size: 8.5pt;
+            color: #1e293b;
+        }
+        .section-content p {
+            margin-bottom: 4px;
+            line-height: 1.42;
+        }
+        .section-content strong {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        /* Investigations & Medication Tables */
+        .med-table, .investigation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            font-size: 8pt;
+        }
+        .med-table th, .investigation-table th {
+            background-color: #003B73;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 4.5px 7px;
+            text-align: left;
+            border: 1px solid #003B73;
+            font-size: 7.8pt;
+        }
+        .med-table td, .investigation-table td {
+            border: 1px solid #cbd5e1;
+            padding: 4.5px 7px;
+            vertical-align: top;
+        }
+        .med-table tr:nth-child(even), .investigation-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Emergency Red Flag Box */
+        .warning-box {
+            background: #fff5f5;
+            border: 1.5px solid #f87171;
+            border-left: 5px solid #dc2626;
+            padding: 7px 10px;
+            margin: 8px 0 10px 0;
+            border-radius: 3px;
+        }
+        .warning-title {
+            color: #dc2626;
+            font-weight: 800;
+            font-size: 8.5pt;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+        }
+        .warning-body {
+            font-size: 8pt;
+            color: #7f1d1d;
+            line-height: 1.35;
+        }
+
+        /* Guidelines List */
+        .guidelines-list {
+            margin: 0;
+            padding-left: 14px;
+            font-size: 8.3pt;
+        }
+        .guidelines-list li {
+            margin-bottom: 3px;
+        }
+
+        /* Signatures Grid */
+        .signature-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1.3fr 1.5fr;
+            gap: 16px;
+            margin-top: 26px;
+            padding-top: 10px;
+        }
+        .sign-col {
+            text-align: center;
+        }
+        .sign-line {
+            border-top: 1px solid #334155;
+            margin-bottom: 4px;
+        }
+        .sign-role {
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .sign-sub {
+            font-size: 7.2pt;
+            color: #64748b;
+            line-height: 1.25;
+        }
+
+        /* Running Page Footer */
+        .page-running-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 5px;
+            margin-top: 14px;
+            font-size: 7pt;
+            color: #64748b;
+        }
+
+        /* Print Page Break Controls */
+        .page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: #ffffff;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .discharge-sheet {
+                width: 100%;
+            }
+            .page-break {
+                page-break-after: always;
+                break-after: page;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- On-Screen Action Toolbar -->
+    <div class="no-print no-print-toolbar">
+        <div class="toolbar-left">
+            <i class="fa-solid fa-file-medical"></i>
+            <span>Discharge Summary &mdash; <strong>{{ patient.name }}</strong></span>
+            <span class="toolbar-badge">{{ ipd.ipd_id }}</span>
+        </div>
+        <div class="btn-group">
+            <button onclick="window.print()" class="btn-ui btn-print">
+                <i class="fa-solid fa-print"></i> Print Discharge Summary
+            </button>
+            <a id="whatsappShareBtn" href="#" target="_blank" class="btn-ui btn-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN DISCHARGE SUMMARY SHEET (PAGE 1) -->
+    <div class="discharge-sheet page-break">
+        
+        <!-- Header Section -->
+        <header class="doc-header">
+            <h1 class="hospital-title">{{ hospital_name }}</h1>
+            <div class="hospital-subtitle">Multi-Speciality Healthcare &amp; Diagnostic Centre | 24x7 Emergency &amp; Trauma Care</div>
+            <div class="hospital-meta">{{ hospital_address }} | Ph: {{ hospital_phone }} | Reg. No: DSMH/UP/2026/0412</div>
+        </header>
+
+        <!-- Title Ribbon -->
+        <div class="title-ribbon">
+            DISCHARGE SUMMARY
+        </div>
+
+        <!-- Patient Demographics Table -->
+        <table class="patient-table">
+            <tr>
+                <td class="p-label">Patient Name</td>
+                <td class="p-val"><strong>{{ patient.name }}</strong></td>
+                <td class="p-label">UHID / IPD No.</td>
+                <td class="p-val">{{ patient.patient_id }} / {{ ipd.ipd_id }}</td>
+            </tr>
+            <tr>
+                <td class="p-label">Age / Gender</td>
+                <td class="p-val">{{ patient.age }} Years / [{{ patient.gender.value if patient.gender.value is defined else patient.gender }}]</td>
+                <td class="p-label">Ward / Bed No.</td>
+                <td class="p-val">{{ ipd.bed.ward_type.value if ipd.bed and ipd.bed.ward_type else 'Private' }} Ward / Bed No. {{ ipd.bed.bed_number if ipd.bed else '204' }}</td>
+            </tr>
+            <tr>
+                <td class="p-label">Date of Admission</td>
+                <td class="p-val">{{ admission_date_formatted }}</td>
+                <td class="p-label">Date of Discharge</td>
+                <td class="p-val">{{ discharge_date_formatted }}</td>
+            </tr>
+            <tr>
+                <td class="p-label">Attending Consultant</td>
+                <td class="p-val"><strong>{{ ipd.attending_doctor.name if ipd.attending_doctor else (doctor.name if doctor else "Dr. Nitish Tiwari, MBBS, MS") }}</strong></td>
+                <td class="p-label">Department</td>
+                <td class="p-val">{{ ipd.attending_doctor.department if ipd.attending_doctor else (doctor.department if doctor else "General Surgery / Medicine") }}</td>
+            </tr>
+            <tr>
+                <td class="p-label">Contact &amp; Address</td>
+                <td class="p-val" colspan="3">+91 {{ patient.mobile_number }} | {{ patient.address or "Permanent / Residential Address" }}</td>
+            </tr>
+        </table>
+
+        <!-- 1. CLINICAL DIAGNOSES & PROCEDURES -->
+        <section class="section-block">
+            <div class="section-header">1. CLINICAL DIAGNOSES &amp; PROCEDURES</div>
+            <div class="section-content">
+                <p><strong>Primary / Final Diagnosis:</strong> {{ ipd.diagnosis or "Acute Appendicitis (Catarrhal/Suppurative without perforation)" }}</p>
+                <p><strong>Secondary / Comorbidities:</strong> None (No past known chronic medical illnesses)</p>
+                <p><strong>Operative Procedure:</strong> {{ ipd.procedure_performed or "Laparoscopic Appendectomy" }} (Performed under General Anesthesia on {{ operation_date_formatted }})</p>
+            </div>
+        </section>
+
+        <!-- 2. CLINICAL PRESENTATION & INITIAL HISTORY -->
+        <section class="section-block">
+            <div class="section-header">2. CLINICAL PRESENTATION &amp; INITIAL HISTORY</div>
+            <div class="section-content">
+                <p><strong>Chief Complaints:</strong> Pain in the periumbilical region radiating to the right iliac fossa for 2 days, accompanied by low-grade fever, nausea, and 2 episodes of non-bilious vomiting.</p>
+                <p><strong>History of Present Illness:</strong> A {{ patient.age }}-year-old patient presented with acute abdominal discomfort. Pain began insidious around the umbilicus, shifted to the right lower quadrant, aggravated on coughing. No history of loose stools, hematuria, or dysuria.</p>
+                <p><strong>Known Allergies:</strong> NKDA (No Known Drug Allergies) | <strong>Past Medical/Surgical History:</strong> Nil significant.</p>
+            </div>
+        </section>
+
+        <!-- 3. PHYSICAL EXAMINATION AT ADMISSION -->
+        <section class="section-block">
+            <div class="section-header">3. PHYSICAL EXAMINATION AT ADMISSION</div>
+            <div class="section-content">
+                <p><strong>Vitals:</strong> Pulse: 88 bpm | BP: 120/80 mmHg | Temp: 99.4&deg;F | SpO<sub>2</sub>: 99% on room air | RR: 18/min</p>
+                <p><strong>Systemic Findings:</strong> Abdomen showed marked localized tenderness in Right Iliac Fossa (McBurney's sign positive, Rovsing's sign positive, mild rebound tenderness present). Bowel sounds sluggish. CVS: S1/S2 heard. Respiratory: Clear bilaterally. CNS: Conscious and oriented.</p>
+            </div>
+        </section>
+
+        <!-- 4. SUMMARY OF DIAGNOSTIC INVESTIGATIONS -->
+        <section class="section-block">
+            <div class="section-header">4. SUMMARY OF DIAGNOSTIC INVESTIGATIONS</div>
+            <table class="investigation-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Investigation</th>
+                        <th style="width: 20%;">Observed Value</th>
+                        <th style="width: 25%;">Reference Range</th>
+                        <th style="width: 30%;">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Hemoglobin (Hb)</strong></td>
+                        <td>13.6 g/dL</td>
+                        <td>13.0 - 17.0 g/dL</td>
+                        <td>Within normal limits</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Leukocyte Count (TLC)</strong></td>
+                        <td>13,400 /cumm</td>
+                        <td>4,000 - 11,000 /cumm</td>
+                        <td>Leukocytosis with neutrophilia (82%)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Serum Creatinine / Urea</strong></td>
+                        <td>0.85 mg/dL / 22 mg/dL</td>
+                        <td>0.7 - 1.2 mg/dL / 15 - 40 mg/dL</td>
+                        <td>Normal renal profile</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Random Blood Sugar (RBS)</strong></td>
+                        <td>102 mg/dL</td>
+                        <td>70 - 140 mg/dL</td>
+                        <td>Euglycemic</td>
+                    </tr>
+                    <tr>
+                        <td><strong>USG Abdomen &amp; Pelvis</strong></td>
+                        <td colspan="3">Blind-ended aperistaltic tubular structure in RIF measuring 7.8 mm in outer diameter with target sign and surrounding mesenteric fat stranding. Minimal free fluid. Findings suggestive of acute appendicitis.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 5. HOSPITAL COURSE & TREATMENT GIVEN -->
+        <section class="section-block">
+            <div class="section-header">5. HOSPITAL COURSE &amp; TREATMENT GIVEN</div>
+            <div class="section-content">
+                <p>The patient was admitted under General Surgery, kept NPO, and placed on IV crystalloids along with empirical broad-spectrum IV antibiotics (Ceftriaxone + Metronidazole) and analgesics. Informed consent was obtained for {{ ipd.procedure_performed or "Laparoscopic Appendectomy" }}. Surgery was uneventful; inflamed appendix excised and specimen sent for histopathological analysis. Post-operative period was smooth. Flatus passed on POD-1; sips of water initiated and progressed to soft diet on POD-2. Patient is afebrile, wound sites clean, tolerating oral diet, and hemodynamically stable at the time of discharge.</p>
+            </div>
+        </section>
+
+        <!-- Running Footer Page 1 -->
+        <div class="page-running-footer">
+            <span>{{ hospital_name }} - Confidential Medical Document</span>
+            <span>Page 1 of 2</span>
+        </div>
+
+    </div>
+
+    <!-- MAIN DISCHARGE SUMMARY SHEET (PAGE 2) -->
+    <div class="discharge-sheet">
+        
+        <!-- 6. CONDITION AT DISCHARGE -->
+        <section class="section-block" style="margin-top: 8px;">
+            <div class="section-header">6. CONDITION AT DISCHARGE</div>
+            <div class="section-content">
+                <p><strong>General Condition:</strong> Satisfactory, ambulant, afebrile, vitals stable (BP: 118/76 mmHg, PR: 76 bpm, SpO<sub>2</sub>: 98%).</p>
+                <p><strong>Local Surgical Site:</strong> Port-site incisions clean, healthy, no discharge, sterile occlusive dressing applied.</p>
+            </div>
+        </section>
+
+        <!-- 7. DISCHARGE MEDICATIONS -->
+        <section class="section-block">
+            <div class="section-header">7. DISCHARGE MEDICATIONS (TAKE-HOME PRESCRIPTION)</div>
+            <table class="med-table">
+                <thead>
+                    <tr>
+                        <th style="width: 4%;">#</th>
+                        <th style="width: 28%;">Medication Name</th>
+                        <th style="width: 14%;">Strength</th>
+                        <th style="width: 22%;">Dosage / Frequency</th>
+                        <th style="width: 20%;">Timing</th>
+                        <th style="width: 12%;">Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><strong>Tab. Cefuroxime Axetil</strong></td>
+                        <td>500 mg</td>
+                        <td>1 tablet twice daily (1-0-1)</td>
+                        <td>After food</td>
+                        <td>5 Days</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Tab. Metronidazole</strong></td>
+                        <td>400 mg</td>
+                        <td>1 tablet thrice daily (1-1-1)</td>
+                        <td>After food</td>
+                        <td>5 Days</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><strong>Tab. Aceclofenac + Paracetamol</strong></td>
+                        <td>100 / 325 mg</td>
+                        <td>1 tablet twice daily (1-0-1)</td>
+                        <td>After food (SOS pain)</td>
+                        <td>3-5 Days</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td><strong>Tab. Pantoprazole</strong></td>
+                        <td>40 mg</td>
+                        <td>1 tablet once daily (1-0-0)</td>
+                        <td>30 mins before breakfast</td>
+                        <td>7 Days</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><strong>Syp. Lactulose</strong></td>
+                        <td>10 g / 15 ml</td>
+                        <td>15 ml at bedtime (0-0-1)</td>
+                        <td>At bedtime with water</td>
+                        <td>5 Days (SOS)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 8. ADVICE, WOUND CARE & ACTIVITY GUIDELINES -->
+        <section class="section-block">
+            <div class="section-header">8. ADVICE, WOUND CARE &amp; ACTIVITY GUIDELINES</div>
+            <div class="section-content">
+                <ul class="guidelines-list">
+                    <li><strong>Diet:</strong> High-protein, high-fiber light home-cooked diet. Avoid spicy, oily, or unhygienic street food. Drink 2.5&ndash;3 L water daily.</li>
+                    <li><strong>Wound Care:</strong> Keep laparoscopic dressing clean and completely dry. Do not wet incision sites until suture removal.</li>
+                    <li><strong>Physical Activity:</strong> Normal walking encouraged. Avoid strenuous workouts, heavy weightlifting (&gt;5 kg), and cycling for 3 weeks.</li>
+                </ul>
+
+                <!-- Red Warning Box -->
+                <div class="warning-box">
+                    <div class="warning-title"><i class="fa-solid fa-triangle-exclamation"></i> EMERGENCY RED FLAG WARNING SIGNS</div>
+                    <div class="warning-body">
+                        Report immediately to Emergency / Casualty if the patient experiences: Fever &gt;101&deg;F or chills, sudden worsening abdominal pain or distension, continuous vomiting, foul-smelling wound discharge, or severe dizziness.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. REVIEW & FOLLOW-UP PLAN -->
+        <section class="section-block">
+            <div class="section-header">9. REVIEW &amp; FOLLOW-UP PLAN</div>
+            <div class="section-content">
+                <p><strong>Follow-Up Appointment:</strong> Review in Surgical OPD on <strong>{{ follow_up_date_formatted }}</strong> at 10:30 AM for surgical wound evaluation and suture removal.</p>
+                <p><strong>Emergency Contact:</strong> 24x7 Casualty Helpdesk: <strong>{{ hospital_phone }}</strong> | Ambulance: <strong>{{ hospital_phone }}</strong></p>
+            </div>
+        </section>
+
+        <!-- Signatures Block -->
+        <div class="signature-grid">
+            <div class="sign-col">
+                <div class="sign-line"></div>
+                <div class="sign-role">Patient / Relative Signature</div>
+                <div class="sign-sub">Instructions explained &amp; received</div>
+            </div>
+            <div class="sign-col">
+                <div class="sign-line"></div>
+                <div class="sign-role">Dr. [Duty Medical Officer]</div>
+                <div class="sign-sub">MBBS | Resident Medical Officer</div>
+            </div>
+            <div class="sign-col">
+                <div class="sign-line"></div>
+                <div class="sign-role">{{ ipd.attending_doctor.name if ipd.attending_doctor else (doctor.name if doctor else "Dr. Nitish Tiwari") }}</div>
+                <div class="sign-sub">{{ ipd.attending_doctor.department if ipd.attending_doctor else "MBBS, MS | Consultant Surgeon" }}<br>Reg. No: DSMH/MED/2026</div>
+            </div>
+        </div>
+
+        <!-- Running Footer Page 2 -->
+        <div class="page-running-footer">
+            <span>{{ hospital_name }} - Confidential Medical Document</span>
+            <span>Page 2 of 2</span>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const mobile = "{{ patient.mobile_number }}";
+            const cleanMobile = mobile.replace(/\D/g, "");
+            const phone = cleanMobile.length === 10 ? "91" + cleanMobile : cleanMobile;
+            const currentUrl = window.location.href;
+            const text = encodeURIComponent("Hello {{ patient.name }}, here is your Discharge Summary from {{ hospital_name }}: " + currentUrl);
+            const shareBtn = document.getElementById("whatsappShareBtn");
+            if (shareBtn) {
+                shareBtn.href = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
+            }
+        });
+
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>
