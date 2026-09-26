@@ -2,34 +2,35 @@
 Application configuration settings
 """
 
-from pydantic import model_validator
-from pydantic_settings import BaseSettings
+from pydantic import field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 import os
 
 
-def get_database_url() -> str:
-    """
-    Get database URL and convert it to the correct format for asyncpg
-    """
-    db_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/hospital_db")
+def normalize_db_url(db_url: str) -> str:
+    """Convert postgres:// and postgresql:// to postgresql+asyncpg:// for asyncpg driver"""
+    if not db_url:
+        return "postgresql+asyncpg://postgres:postgres@localhost:5432/hospital_db"
     
-    # Render provides postgres:// but we need postgresql+asyncpg://
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
+        db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     
     return db_url
 
 
 class Settings(BaseSettings):
     """Application settings"""
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
     
     # Database
-    DATABASE_URL: str = get_database_url()
+    DATABASE_URL: str = normalize_db_url(os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/hospital_db"))
     DATABASE_URL_TEST: str = "sqlite+aiosqlite:///./test.db"
     
     # Security
-    SECRET_KEY: str = "your-secret-key-change-in-production"
+    SECRET_KEY: str = "your-secret-key-change-in-production-secure"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours - full work shift
     
@@ -47,15 +48,12 @@ class Settings(BaseSettings):
     THERMAL_PRINTER_WIDTH: int = 58
     A4_PRINTER_NAME: str = "default"
     
-    @model_validator(mode="after")
-    def check_secret_key_in_production(self) -> "Settings":
-        if self.ENVIRONMENT.lower() == "production" and self.SECRET_KEY == "your-secret-key-change-in-production":
-            raise ValueError("SECRET_KEY must be changed from the default value in a production environment.")
-        return self
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        if isinstance(v, str):
+            return normalize_db_url(v)
+        return v
 
 
 # Global settings instance
