@@ -102,12 +102,12 @@
         /* Corporate Minimal Header */
         .header-section {
             display: grid;
-            grid-template-columns: 1.1fr 1.4fr 1.1fr;
+            grid-template-columns: 1.1fr 1.3fr 1.2fr;
             align-items: start;
             border-bottom: 2px solid #0f172a;
             padding-bottom: 12px;
             margin-bottom: 12px;
-            gap: 12px;
+            gap: 14px;
         }
         .doctor-column {
             text-align: left;
@@ -161,16 +161,14 @@
             color: #64748b;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-        .hospital-address-line {
-            font-size: 7.5pt;
-            color: #475569;
-            line-height: 1.3;
         }
 
+        /* Right Side: Hospital Address & Phone */
         .record-column {
             text-align: right;
+            font-size: 7.5pt;
+            color: #475569;
+            line-height: 1.35;
         }
         .doc-badge {
             display: inline-block;
@@ -183,10 +181,15 @@
             text-transform: uppercase;
             margin-bottom: 5px;
         }
-        .record-contact {
-            font-size: 7.5pt;
-            color: #475569;
-            line-height: 1.35;
+        .hospital-contact-address {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+        .hospital-contact-phone {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 2px;
         }
         .emergency-label {
             font-weight: 700;
@@ -299,61 +302,45 @@
         }
         {% endif %}
 
-        /* Clinical Vitals Segment */
-        .vitals-matrix {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            border: 1px solid #0f172a;
-            background: #ffffff;
-            margin-bottom: 12px;
-        }
-        .vital-cell {
-            padding: 5px 8px;
-            border-right: 1px solid #cbd5e1;
-            font-size: 7.5pt;
-        }
-        .vital-cell:last-child {
-            border-right: none;
-        }
-        .vital-tag {
-            font-size: 6.5pt;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #64748b;
-            margin-bottom: 2px;
-        }
-        .vital-line {
-            height: 14px;
-            border-bottom: 1px dotted #94a3b8;
-        }
-
-        /* Prescription Canvas */
+        /* Prescription Canvas with Left Vitals Column */
         .prescription-canvas {
             flex: 1;
             border: 1px solid #e2e8f0;
             padding: 14px 18px;
             position: relative;
-            min-height: 520px;
+            min-height: 540px;
             background: #ffffff;
             display: grid;
             grid-template-columns: 140px 1fr;
             gap: 18px;
         }
-        .gutter-notes {
-            border-right: 1px solid #f1f5f9;
-            padding-right: 12px;
+        
+        /* Left Column: Vitals (BP, Pulse, Temp, SpO2, Weight) */
+        .gutter-vitals {
+            border-right: 1.5px solid #f1f5f9;
+            padding-right: 14px;
             display: flex;
             flex-direction: column;
-            gap: 90px;
+            gap: 22px;
         }
-        .gutter-label {
-            font-size: 6.8pt;
+        .vital-item-block {
+            display: flex;
+            flex-direction: column;
+        }
+        .vital-label {
+            font-size: 7pt;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: #94a3b8;
+            color: #64748b;
+            margin-bottom: 3px;
         }
+        .vital-write-line {
+            height: 18px;
+            border-bottom: 1px dotted #94a3b8;
+        }
+
+        /* Right Column: Rx Area */
         .rx-main {
             position: relative;
         }
@@ -455,7 +442,7 @@
 
         <!-- Header Section -->
         <header class="header-section">
-            <!-- Doctor Details -->
+            <!-- Doctor Details (Left) -->
             <div class="doctor-column">
                 <h2 class="doctor-title">{{ doctor.name if doctor else "Medical Officer" }}</h2>
                 <div class="doctor-sub">M.B.B.S. &bull; {{ doctor.department if doctor else visit.department or "General Medicine" }}</div>
@@ -463,22 +450,21 @@
                 <div class="doctor-meta-text">OPD Hours: Mon &ndash; Sat (10:00 AM &ndash; 06:00 PM)</div>
             </div>
 
-            <!-- Hospital Corporate Branding -->
+            <!-- Hospital Corporate Branding (Center) -->
             <div class="hospital-column">
                 <div class="hospital-logo-wrap">
                     <img src="/static/images/hospital_logo.png" alt="{{ hospital_name }} Logo" class="hospital-logo-img" onerror="this.style.display='none'">
                 </div>
                 <h1 class="hospital-brand-name">{{ hospital_name }}</h1>
                 <div class="hospital-subtitle">Center for Clinical Excellence &bull; Multi-Speciality</div>
-                <div class="hospital-address-line">{{ hospital_address }}</div>
-                <div class="hospital-address-line">Phone: {{ hospital_phone }}</div>
             </div>
 
-            <!-- Record Meta -->
+            <!-- Hospital Address, Phone & Outpatient Badge (Top Right) -->
             <div class="record-column">
                 <div class="doc-badge">Outpatient Record</div>
-                <div class="record-contact">Emergency: <span class="emergency-label">24&times;7 Active</span></div>
-                <div class="record-contact">Helpdesk: {{ hospital_phone }}</div>
+                <div class="hospital-contact-address">{{ hospital_address }}</div>
+                <div class="hospital-contact-phone">Phone: {{ hospital_phone }}</div>
+                <div>Emergency: <span class="emergency-label">24&times;7 Active</span></div>
             </div>
         </header>
 
@@ -544,43 +530,33 @@
         </div>
         {% endif %}
 
-        <!-- Clinical Vitals Tracking Line -->
-        <section class="vitals-matrix">
-            <div class="vital-cell">
-                <div class="vital-tag">BP (mmHg)</div>
-                <div class="vital-line"></div>
-            </div>
-            <div class="vital-cell">
-                <div class="vital-tag">Pulse (bpm)</div>
-                <div class="vital-line"></div>
-            </div>
-            <div class="vital-cell">
-                <div class="vital-tag">Temp (&deg;F)</div>
-                <div class="vital-line"></div>
-            </div>
-            <div class="vital-cell">
-                <div class="vital-tag">SpO2 (%)</div>
-                <div class="vital-line"></div>
-            </div>
-            <div class="vital-cell">
-                <div class="vital-tag">Weight (kg)</div>
-                <div class="vital-line"></div>
-            </div>
-        </section>
-
-        <!-- Prescription Body -->
+        <!-- Prescription Body with Left Vitals Column -->
         <main class="prescription-canvas">
-            <div class="gutter-notes">
-                <div>
-                    <span class="gutter-label">Clinical Notes</span>
+            <!-- Left Column: Vitals -->
+            <div class="gutter-vitals">
+                <div class="vital-item-block">
+                    <span class="vital-label">B.P. (mmHg)</span>
+                    <div class="vital-write-line"></div>
                 </div>
-                <div>
-                    <span class="gutter-label">Diagnosis</span>
+                <div class="vital-item-block">
+                    <span class="vital-label">Pulse (bpm)</span>
+                    <div class="vital-write-line"></div>
                 </div>
-                <div>
-                    <span class="gutter-label">Follow-up</span>
+                <div class="vital-item-block">
+                    <span class="vital-label">Temp (&deg;F)</span>
+                    <div class="vital-write-line"></div>
+                </div>
+                <div class="vital-item-block">
+                    <span class="vital-label">SpO2 (%)</span>
+                    <div class="vital-write-line"></div>
+                </div>
+                <div class="vital-item-block">
+                    <span class="vital-label">Weight (kg)</span>
+                    <div class="vital-write-line"></div>
                 </div>
             </div>
+
+            <!-- Right Column: Rx Area -->
             <div class="rx-main">
                 <div class="rx-sign">&#8478;</div>
                 <div class="rx-ghost">&#8478;</div>
